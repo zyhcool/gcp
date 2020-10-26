@@ -9,7 +9,7 @@ node {
     stage('Build') {
         echo "Building..."
         sh "docker build -t gcp ."
-        sh "docker images | grep none | awk '{print \$3}' | xargs docker rmi" // 删除标签为none的镜像
+        // sh "docker images | grep none | awk '{print \$3}' | xargs docker rmi || true " // 删除标签为none的镜像
         echo "Build success"
     }
 
