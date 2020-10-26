@@ -18,6 +18,8 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/gcp/auth.json
     depends_on:
       - database
+    volumes:
+      - /data/logs/gcp:/usr/src/gcp/logs
     ports:
       - 5050:5050
     networks:

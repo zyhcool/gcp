@@ -2,6 +2,7 @@ node_modules
 Dockerfile
 .dockerignore
 .github
+.git
 
 integrationtests
 loadtests
@@ -9,3 +10,6 @@ loadtests
 docker-compose.yml
 LICENSE
 README.md
+
+auth.json
+logs
