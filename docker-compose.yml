@@ -1,0 +1,27 @@
+# 单体部署
+version: '3.7'
+services:
+  database:
+    image: mongo:bionic
+    restart: always
+    volumes:
+      - ~/data/db/gcp:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      - gcp-web-net
+  web:
+    build: .
+    image: gcp
+    environment:
+      - NODE_ENV=prod
+      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/gcp/auth.json
+    depends_on:
+      - database
+    ports:
+      - 5050:5050
+    networks:
+      - gcp-web-net
+networks:
+  gcp-web-net:
+    driver: bridge
