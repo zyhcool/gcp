@@ -23,6 +23,7 @@ const setupServer = async () => {
     app.use(loggerMid());
     app.use(bodyParser());
 
+
     // init routing-controllers
     useContainer(Container);
     useKoaServer(app, {
