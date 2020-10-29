@@ -13,8 +13,8 @@ import { useKoaServer, Action, useContainer } from "routing-controllers";
 import { Container } from "typedi";
 import { dbConnect } from "./init/dbConnection";
 const setupServer = async () => {
-    // Mysql connection
-    await dbConnect();
+    // mongodb connection
+    // await dbConnect();
 
     const app = new Koa();
 

@@ -32,8 +32,15 @@ export default class GeneralController {
         // Creates a client
         const compute = new Compute();
 
-        const zones = await compute.getZones()
-        console.log(zones)
+        const config = {
+            protocols: {
+                tcp: [3000],
+                udp: []
+            },
+            ranges: ['0.0.0.0/0'],
+        }
+        const firewall = await compute.createFirewall("test-firewall", config)
+        console.log(firewall)
     }
 
 }
