@@ -22,18 +22,18 @@ export default class GeneralController {
         const firewalls = await compute.getFirewalls({ autoPaginate: false })
         console.log(firewalls)
     }
-    
+
     @Get("/")
     async get() {
         // Creates a client
         const compute = new Compute();
 
-        const firewall=compute.firewall("all")
+        const firewall = compute.firewall("all")
         const rule = await firewall.get();
         console.log(rule[0].metadata.sourceRanges)
         console.log(rule[0].metadata.allowed)
 
-        const firewall1=compute.firewall("default-allow-http")
+        const firewall1 = compute.firewall("default-allow-http")
         const rule1 = await firewall1.get();
         console.log(rule1)
     }
@@ -45,15 +45,15 @@ export default class GeneralController {
         const firewall = compute.firewall('test-firewall');
 
         const config = {
-  protocols: {
-    tcp: [3000],
-  },
+            protocols: {
+                tcp: [3000],
+            },
 
-  ranges: ['0.0.0.0/0'],
-  tags:["tcp-3030","tcp-4040"],
+            ranges: ['0.0.0.0/0'],
+            tags: ["tcp-3030", "tcp-4040"],
         }
         const res = await firewall.create(config);
-        const [createdFirewall,operation,apiResponse]=res
+        const [createdFirewall, operation, apiResponse] = res
         console.log(res)
         const metadata = await createdFirewall.getMetadata()
         console.log(metadata)
@@ -61,18 +61,18 @@ export default class GeneralController {
 
         const metadata1 = {
             name: "test-firewall-3030-4040",
-            description:"this firewall is just for test",
+            description: "this firewall is just for test",
             // network:"", // default: global/networks/default
             priority: 1000,
-            sourceRanges:['0.0.0.0/0'],
-            direction:"INGRESS",
-            allowed:[
+            sourceRanges: ['0.0.0.0/0'],
+            direction: "INGRESS",
+            allowed: [
                 {
-                    IPProtocol:"tcp",
-                    ports:[3030,4040],
+                    IPProtocol: "tcp",
+                    ports: [3030, 4040],
                 }
             ],
-            logConfig:{
+            logConfig: {
                 enable: false,
             },
 

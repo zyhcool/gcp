@@ -32,15 +32,16 @@ export default class GeneralController {
         // Creates a client
         const compute = new Compute();
 
+        const zone = compute.zone("us-central1")
+        const vm = zone.vm("test-vm") // vm name
+        const disk = zone.disk("test-disk")
         const config = {
-            protocols: {
-                tcp: [3000],
-                udp: []
-            },
-            ranges: ['0.0.0.0/0'],
+            disks: [disk],
+            http: true,
+            https: true,
+            // networkInterfaces:[], // default: [ { network: 'global/networks/default' } ]
         }
-        const firewall = await compute.createFirewall("test-firewall", config)
-        console.log(firewall)
+        compute.create()
     }
 
 }
