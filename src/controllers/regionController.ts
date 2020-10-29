@@ -9,7 +9,7 @@ import Compute from '@google-cloud/compute'
 
 
 @Controller("/region")
-export default class GeneralController {
+export default class RegionController {
 
     @Inject(type => SkuService)
     skuService: SkuService;

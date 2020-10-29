@@ -9,7 +9,7 @@ import Compute from '@google-cloud/compute'
 
 
 @Controller("/firewall")
-export default class GeneralController {
+export default class FirewallController {
 
     @Inject(type => SkuService)
     skuService: SkuService;

@@ -9,8 +9,8 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 
 
-@Controller("/firewall")
-export default class GeneralController {
+@Controller("/disk")
+export default class DiskController {
 
     @Inject(type => SkuService)
     skuService: SkuService;
