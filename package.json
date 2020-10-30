@@ -4,7 +4,7 @@
     "description": "API REST using NodeJS and KOA framework, typescript. TypeORM for SQL with class-validators. Middlewares JWT, CORS, Winston Logger. Swagger API docs",
     "main": "dist/server.js",
     "scripts": {
-        "dev": "nodemon --watch src -e ts,tsx --exec ts-node src/server.ts",
+        "dev": "ts-node-dev src/server.ts",
         "build": "tsc",
         "clean": "rimraf dist",
         "start": "npm-run-all -s clean build start:simple",

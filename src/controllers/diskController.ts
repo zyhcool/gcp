@@ -32,17 +32,18 @@ export default class DiskController {
     ) {
         // Creates a client
         const compute = new Compute();
+        const zone = compute.zone("us-central1-a")
 
-        const disk = compute.disk(diskname)
-        console.log(disk)
-        return disk
+        const disk = zone.disk(diskname)
+        const diskRes = await disk.get()
+        console.log(diskRes)
     }
 
     @Get("/create")
     async create() {
         const compute = new Compute();
 
-        const zone = compute.zone('us-central1')
+        const zone = compute.zone('us-central1-a')
         const config = {
             name: "test-disk",
             sourceSnapshot: 'projects/gcp-test-293701/global/snapshots/snapshot-1',
@@ -53,7 +54,6 @@ export default class DiskController {
         const res = await zone.createDisk("test-disk", config)
         const [disk, operation, apiResponse] = res
         console.log(res);
-
 
     }
 

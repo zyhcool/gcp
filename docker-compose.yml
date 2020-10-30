@@ -15,11 +15,12 @@ services:
     image: gcp
     environment:
       - NODE_ENV=prod
-      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/gcp/auth.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/gcp/auth/auth.json
     depends_on:
       - database
     volumes:
       - /data/logs/gcp:/usr/src/gcp/logs
+      - /var/projects/gcp/auth:/usr/src/gcp/auth
     ports:
       - 5050:5050
     networks:
