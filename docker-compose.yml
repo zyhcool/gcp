@@ -20,7 +20,7 @@ services:
       - database
     volumes:
       - /data/logs/gcp:/usr/src/gcp/logs
-      - /var/projects/gcp/auth/auth.json:/usr/src/gcp/auth/auth.json
+      - /var/projects/gcp/auth:/usr/src/gcp/auth
     ports:
       - 5050:5050
     networks:
