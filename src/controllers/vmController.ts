@@ -7,6 +7,7 @@ import {
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
+import PollManager from "../utils/pollManager";
 
 
 @Controller("/vm")
@@ -34,7 +35,7 @@ export default class VmController {
         const compute = new Compute();
 
         const zone = compute.zone('us-central1-a')
-        const vm = zone.vm("test-instance-1")
+        const vm = zone.vm("gcp-test")
         const res = await vm.get();
         console.log(res[0])
         console.log(res[0].metadata.networkInterfaces[0].networkIP)
@@ -45,10 +46,10 @@ export default class VmController {
     async create() {
         const compute = new Compute();
 
-        const num="1"
-        const diskName = "test-disk-"+num
-        const vmName = 'test-vm-'+num
-        const addressName='test-staticip-'+num
+        const num = "1"
+        const diskName = "test-disk-" + num
+        const vmName = 'test-vm-' + num
+        const addressName = 'test-staticip-' + num
 
         const zone = compute.zone('us-central1-a')
         // 创建启动磁盘，使用快照snapshot-1
@@ -59,10 +60,9 @@ export default class VmController {
             type: "projects/gcp-test-293701/zones/us-central1-a/diskTypes/pd-standard",
         }
         const diskRes = await zone.createDisk(diskName, config)
-        const [disk] = diskRes
-        console.log(diskRes);
+        console.log('diskRes:-----------------\n', diskRes);
 
-        await sleep(10)
+
 
         // 创建实例，挂载磁盘
         const vmconfig = {
@@ -71,7 +71,7 @@ export default class VmController {
                     type: "PERSISTENT", // default is PERSISTENT
                     boot: true, // 是否为启动磁盘
                     mode: "READ_WRITE", // READ_WRITE or READ_ONLY,default is READ_WRITE 
-                    autoDelete: false, // 挂载在的实例被删除时，是否该磁盘也自动删除
+                    autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
                     source: `projects/gcp-test-293701/zones/us-central1-a/disks/${diskName}`,
                 }
             ],
@@ -79,11 +79,15 @@ export default class VmController {
             https: true,
             machineType: "projects/gcp-test-293701/zones/us-central1-a/machineTypes/custom-1-1024", // n1机型，自定义：1vcpu，内存1024mb
         }
-        const vmRes = await zone.createVM(vmName, vmconfig)
-        const [vm]=vmRes
-        console.log(vm.metadata.networkInterfaces[0].accessConfigs[0].natIP)
+        // const vmRes = await zone.createVM(vmName, vmconfig)
+        const vmRes = await PollManager.runTask(10, 10, zone.createVM, zone, vmName, vmconfig);
 
-        await sleep(10)
+        console.log(vmRes)
+
+        const vmMetadata = await vmRes[0].waitFor('RUNNING')
+        const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
+
+
         // 升级临时外部ip为静态ip
         const region = compute.region("us-central1");
         const address = region.address(addressName);
@@ -92,18 +96,19 @@ export default class VmController {
             name: addressName,
             networkTier: "PREMIUM",
             addressType: "EXTERNAL",
-            address: "34.122.87.160",
+            address: externalIP,
         }
-        const addRes = await address.create(options)
+        // const addRes = await address.create(options)
+        const addRes = await PollManager.runTask(10, 10, address.create, address, options);
         console.log(addRes)
     }
 
 }
 
-function sleep(time) {
-    return new Promise((resolve,reject)=>{
-        setTimeout(() => {
-            resolve()
-        }, time*1000);
-    })
-}
+// function sleep(time) {
+//     return new Promise((resolve,reject)=>{
+//         setTimeout(() => {
+//             resolve()
+//         }, time*1000);
+//     })
+// }
