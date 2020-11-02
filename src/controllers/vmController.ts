@@ -8,6 +8,7 @@ import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import PollManager from "../utils/pollManager";
+import { VmService } from "../services/vmService";
 
 
 @Controller("/vm")
@@ -15,6 +16,9 @@ export default class VmController {
 
     @Inject(type => SkuService)
     skuService: SkuService;
+
+    @Inject(type => VmService)
+    vmService: VmService;
 
     @Get("s")
     async gets() {
@@ -43,21 +47,35 @@ export default class VmController {
     }
 
     @Get("/create")
-    async create() {
+    async create(
+        @QueryParam("machineType") machineType: string,
+        @QueryParam("vcpu") vcpu: number,
+        @QueryParam("ram") ram: number,
+        @QueryParam("location") location: string,
+
+    ) {
+        const PROJECT_URL = "projects/gcp-test-293701"
+        const SNAPSHOT = "snapshot-1"
+
         const compute = new Compute();
+        const region = compute.region(location);
+
+        const zoneName = await this.vmService.getZone(location)
+        const zone = compute.zone(zoneName)
+
+        const machineType_str = this.vmService.getMachineType(machineType, vcpu, ram)
 
         const num = "1"
         const diskName = "test-disk-" + num
         const vmName = 'test-vm-' + num
         const addressName = 'test-staticip-' + num
 
-        const zone = compute.zone('us-central1-a')
         // 创建启动磁盘，使用快照snapshot-1
         const config = {
             name: diskName,
-            sourceSnapshot: 'projects/gcp-test-293701/global/snapshots/snapshot-1',
+            sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
             sizeGb: 20,
-            type: "projects/gcp-test-293701/zones/us-central1-a/diskTypes/pd-standard",
+            type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
         }
         const diskRes = await zone.createDisk(diskName, config)
         console.log('diskRes:-----------------\n', diskRes);
@@ -72,16 +90,14 @@ export default class VmController {
                     boot: true, // 是否为启动磁盘
                     mode: "READ_WRITE", // READ_WRITE or READ_ONLY,default is READ_WRITE 
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
-                    source: `projects/gcp-test-293701/zones/us-central1-a/disks/${diskName}`,
+                    source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
                 }
             ],
             http: true,
             https: true,
-            machineType: "projects/gcp-test-293701/zones/us-central1-a/machineTypes/custom-1-1024", // n1机型，自定义：1vcpu，内存1024mb
+            machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
         }
-        // const vmRes = await zone.createVM(vmName, vmconfig)
         const vmRes = await PollManager.runTask(10, 10, zone.createVM, zone, vmName, vmconfig);
-
         console.log(vmRes)
 
         const vmMetadata = await vmRes[0].waitFor('RUNNING')
@@ -89,7 +105,6 @@ export default class VmController {
 
 
         // 升级临时外部ip为静态ip
-        const region = compute.region("us-central1");
         const address = region.address(addressName);
 
         const options = {
@@ -98,9 +113,15 @@ export default class VmController {
             addressType: "EXTERNAL",
             address: externalIP,
         }
-        // const addRes = await address.create(options)
         const addRes = await PollManager.runTask(10, 10, address.create, address, options);
         console.log(addRes)
+
+        await this.vmService.saveVM({
+            ip: externalIP,
+            vmName,
+            gcpInstanceId: vmRes[0].metadata.targetId,
+            bootDisk: diskName,
+        })
     }
 
 }
