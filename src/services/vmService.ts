@@ -65,7 +65,7 @@ export class VmService extends BaseService<Vm>{
             // 重新创建snapshot
             const zone = compute.zone(Config.SOURCE_DISK_ZONE);
             const disk = zone.disk(Config.SOURCE_DISK);
-            const res = disk.createSnapshot(Config.SNAPSHOT)
+            const res = await disk.createSnapshot(Config.SNAPSHOT)
             console.log(res)
 
         }

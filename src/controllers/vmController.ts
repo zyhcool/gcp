@@ -72,6 +72,9 @@ export default class VmController {
         const vmName = 'test-vm-' + num
         const addressName = 'test-staticip-' + num
 
+        // 判断快照是否准备完毕
+
+
         // 创建启动磁盘，使用快照snapshot-1
         const diskConfig = {
             name: diskName,

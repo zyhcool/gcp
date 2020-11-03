@@ -65,4 +65,20 @@ export default class DiskController {
 
     }
 
+    @Get('/snapshot')
+    async snapshot() {
+        const compute = new Compute();
+
+        const snapshot = compute.snapshot('snapshot-1')
+        const res = await snapshot.get()
+        console.log('get:\n---------------\n---------------', res)
+
+        const exists = await snapshot.exists()
+        console.log('exists:\n---------------\n---------------', exists)
+
+        const metadata = await snapshot.getMetadata()
+        console.log('metadata:\n---------------\n---------------', metadata)
+
+    }
+
 }
