@@ -6,6 +6,8 @@ export class Vm {
     vmName: string;
     gcpInstanceId: string;
     bootDisk: string;
+    rootUser: string;
+    rootPassword: string;
 
 
 }
@@ -17,6 +19,8 @@ const vmSchema = new mongoose.Schema({
     vmName: String,
     gcpInstanceId: String,
     bootDisk: String,
+    rootUser: String,
+    rootPassword: String,
 }, { timestamps: true })
 
 export const vmRepository = mongoose.model<VmDocument>("Vm", vmSchema)

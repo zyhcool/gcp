@@ -5,6 +5,7 @@ import Compute from '@google-cloud/compute'
 import { Config } from "../config";
 import PollManager from "../utils/pollManager";
 import operationPromisefy from "../utils/promisefy";
+import generatePasswd from 'generate-password'
 
 
 export class VmService extends BaseService<Vm>{
@@ -54,6 +55,24 @@ export class VmService extends BaseService<Vm>{
         await this.save(vm)
     }
 
+    /**
+     * @description 生成root用户的登录密码
+     * @param {} 
+     * @return {} 
+     */
+    getRootPasswd() {
+        const pwd = generatePasswd.generate({
+            length: 16,
+            numbers: true,
+        })
+        return pwd;
+    }
+
+    /**
+     * @description 更新snapshot（删除原有snapshot，新建snapshot）
+     * @param {} 
+     * @return {} 
+     */
     async updateSnapshot() {
         const compute = new Compute();
         const now = Date.now()

@@ -50,6 +50,7 @@ export default class VmController {
 
     @Get("/create")
     async create(
+        @QueryParam("num") num: string,
         @QueryParam("machineType") machineType: string,
         @QueryParam("vcpu") vcpu: number,
         @QueryParam("ram") ram: number,
@@ -67,7 +68,6 @@ export default class VmController {
 
         const machineType_str = this.vmService.getMachineType(machineType, vcpu, ram)
 
-        const num = "1"
         const diskName = "test-disk-" + num
         const vmName = 'test-vm-' + num
         const addressName = 'test-staticip-' + num
@@ -87,6 +87,8 @@ export default class VmController {
             sizeGb: 20,
             type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
         }
+        // 生成root登录密码
+        const rootPassword = this.vmService.getRootPasswd();
         const vmconfig = {
             disks: [
                 {
@@ -101,7 +103,7 @@ export default class VmController {
                 items: [
                     {
                         key: 'startup-script',
-                        value: '#! /bin/bash\ndocker stop $(docker ps -a)\ndocker rm $(docker ps -a)'
+                        value: `#! /bin/bash\npasswd << EOF\n${rootPassword}\n${rootPassword}\nEOF`
                     }
                 ]
             },
@@ -135,6 +137,8 @@ export default class VmController {
                 vmName,
                 gcpInstanceId: vm.metadata.targetId,
                 bootDisk: diskName,
+                rootUser: 'root',
+                rootPassword,
             })
         }
 
