@@ -7,6 +7,7 @@ import {
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
+import { VmService } from "../services/vmService";
 
 
 @Controller("/disk")
@@ -14,6 +15,9 @@ export default class DiskController {
 
     @Inject(type => SkuService)
     skuService: SkuService;
+
+    @Inject(type => VmService)
+    vmService: VmService;
 
     @Get("s")
     async gets() {
@@ -62,7 +66,6 @@ export default class DiskController {
         operation.on('error', function (metadata) {
             console.log('error:\n', metadata)
         });
-
     }
 
     @Get('/snapshot')
@@ -79,6 +82,11 @@ export default class DiskController {
         const metadata = await snapshot.getMetadata()
         console.log('metadata:\n---------------\n---------------', metadata)
 
+    }
+
+    @Get('/updateSnapshot')
+    async updss() {
+        await this.vmService.updateSnapshot()
     }
 
 }

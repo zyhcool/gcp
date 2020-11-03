@@ -56,6 +56,7 @@ export class VmService extends BaseService<Vm>{
 
     async updateSnapshot() {
         const compute = new Compute();
+        const now = Date.now()
         // 删除旧的snapshot
         const snapshot = compute.snapshot(Config.SNAPSHOT)
         const [ssoperation] = await snapshot.delete()
@@ -67,9 +68,11 @@ export class VmService extends BaseService<Vm>{
             const disk = zone.disk(Config.SOURCE_DISK);
             const res = await disk.createSnapshot(Config.SNAPSHOT)
             console.log(res)
-
+            res[1].on("complete", (metadata) => {
+                if (metadata.status === 'DONE' && metadata.progress === 100) {
+                    console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000)
+                }
+            })
         }
-
     }
-
 }

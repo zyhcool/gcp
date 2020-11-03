@@ -73,6 +73,11 @@ export default class VmController {
         const addressName = 'test-staticip-' + num
 
         // 判断快照是否准备完毕
+        const snapshot = compute.snapshot(Config.SNAPSHOT)
+        const [ss] = await snapshot.get()
+        if (ss.status !== "READY") {
+            throw new Error('snapshot is not ready')
+        }
 
 
         // 创建启动磁盘，使用快照snapshot-1
@@ -135,10 +140,6 @@ export default class VmController {
 
     }
 
-    @Get('/updateSnapshot')
-    async updss() {
-        await this.vmService.updateSnapshot()
-    }
 
 }
 
