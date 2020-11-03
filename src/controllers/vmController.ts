@@ -9,7 +9,7 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import PollManager from "../utils/pollManager";
 import { VmService } from "../services/vmService";
-import { config } from "../config";
+import { Config } from "../config";
 
 
 @Controller("/vm")
@@ -55,8 +55,8 @@ export default class VmController {
         @QueryParam("location") location: string,
 
     ) {
-        const PROJECT_URL = config.PROJECT_URL;
-        const SNAPSHOT = config.SNAPSHOT;
+        const PROJECT_URL = Config.PROJECT_URL;
+        const SNAPSHOT = Config.SNAPSHOT;
 
         const compute = new Compute();
         const region = compute.region(location);
@@ -78,12 +78,6 @@ export default class VmController {
             sizeGb: 20,
             type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
         }
-        const diskRes = await zone.createDisk(diskName, diskConfig)
-        console.log('diskRes:-----------------\n', diskRes);
-
-
-
-        // 创建实例，挂载磁盘
         const vmconfig = {
             disks: [
                 {
@@ -98,31 +92,31 @@ export default class VmController {
             https: true,
             machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
         }
-        const vmRes = await PollManager.runTask(10, 10, zone.createVM, zone, vmName, vmconfig);
-        console.log(vmRes)
+        const [disk, diskOperation] = await zone.createDisk(diskName, diskConfig)
+        diskOperation.on("complete", async (metadata) => {
+            if (metadata.status === "DONE" && metadata.progress === 100) {
+                const [vm] = await zone.createVM(vmName, vmconfig)
+                const vmMetadata = await vm.waitFor('RUNNING')
+                const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
+                const address = region.address(addressName);
 
-        const vmMetadata = await vmRes[0].waitFor('RUNNING')
-        const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
+                const options = {
+                    name: addressName,
+                    networkTier: "PREMIUM",
+                    addressType: "EXTERNAL",
+                    address: externalIP,
+                }
+                await address.create(options)
 
-
-        // 升级临时外部ip为静态ip
-        const address = region.address(addressName);
-
-        const options = {
-            name: addressName,
-            networkTier: "PREMIUM",
-            addressType: "EXTERNAL",
-            address: externalIP,
-        }
-        const addRes = await PollManager.runTask(10, 10, address.create, address, options);
-        console.log(addRes)
-
-        await this.vmService.saveVM({
-            ip: externalIP,
-            vmName,
-            gcpInstanceId: vmRes[0].metadata.targetId,
-            bootDisk: diskName,
+                await this.vmService.saveVM({
+                    ip: externalIP,
+                    vmName,
+                    gcpInstanceId: vm.metadata.targetId,
+                    bootDisk: diskName,
+                })
+            }
         })
+
     }
 
     @Get('/updateSnapshot')

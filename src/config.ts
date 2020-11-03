@@ -1,5 +1,5 @@
 
-export interface Config {
+interface IConfig {
     port: number;
     debugLogging: boolean;
     databaseUrl: string;
@@ -13,7 +13,7 @@ export interface Config {
 const isDevMode = process.env.NODE_ENV === "dev";
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
 
-const config: Config = {
+const Config: IConfig = {
     port: isDevMode ? 4040 : 5050,
     debugLogging: isDevMode,
     databaseUrl: isDevMode ? "mongodb://localhost:27017/gcp" : "mongodb://database/gcp",
@@ -24,4 +24,4 @@ const config: Config = {
     SOURCE_DISK_ZONE: "us-central1-a",
 };
 
-export { config };
+export { Config };

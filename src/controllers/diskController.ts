@@ -50,9 +50,18 @@ export default class DiskController {
             sizeGb: 20,
             type: "projects/gcp-test-293701/zones/us-central1-a/diskTypes/pd-standard",
         }
-        const res = await zone.createDisk("test-disk", config)
+        const res = await zone.createDisk("test-disk1", config)
         const [disk, operation, apiResponse] = res
         console.log(res);
+        operation.on('running', function (metadata) {
+            console.log('running:\n', metadata)
+        });
+        operation.on('complete', function (metadata) {
+            console.log('complete:\n', metadata)
+        });
+        operation.on('error', function (metadata) {
+            console.log('error:\n', metadata)
+        });
 
     }
 
