@@ -28,7 +28,7 @@ export class VmService extends BaseService<Vm>{
         const zones = (zoneRes[0] as Array<any>).filter(zone => {
             const reg = new RegExp(regionName)
             return reg.test(zone.id)
-        })
+        }).map(zone => zone.id)
 
         console.log(zones)
         return zones[0];
