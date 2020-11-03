@@ -70,7 +70,7 @@ export class VmService extends BaseService<Vm>{
             console.log(res)
             res[1].on("complete", (metadata) => {
                 if (metadata.status === 'DONE' && metadata.progress === 100) {
-                    console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000)
+                    console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000) // 测试数据：167.164 s
                 }
             })
         }

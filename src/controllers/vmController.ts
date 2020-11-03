@@ -74,8 +74,8 @@ export default class VmController {
 
         // 判断快照是否准备完毕
         const snapshot = compute.snapshot(Config.SNAPSHOT)
-        const [ss] = await snapshot.get()
-        if (ss.status !== "READY") {
+        const [ssMetadata] = await snapshot.getMetadata()
+        if (ssMetadata.status !== "READY") {
             throw new Error('snapshot is not ready')
         }
 
