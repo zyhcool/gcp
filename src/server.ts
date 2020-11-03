@@ -7,7 +7,7 @@ import "reflect-metadata";
 import path from "path";
 
 import { logger, loggerMid } from "./logger";
-import { config } from "./config";
+import { Config } from "./config";
 import { cron } from "./cron";
 import { useKoaServer, Action, useContainer } from "routing-controllers";
 import { Container } from "typedi";
@@ -46,8 +46,8 @@ const setupServer = async () => {
         },
     });
 
-    app.listen(config.port);
-    console.log(`Server running on port ${config.port}`);
+    app.listen(Config.port);
+    console.log(`Server running on port ${Config.port}`);
 
     cron.start();
 };

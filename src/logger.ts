@@ -1,9 +1,9 @@
 import { Context } from "koa";
-import { config } from "./config";
+import { Config } from "./config";
 import winston, { transports, format, createLogger } from "winston";
 
 const loggerOption = {
-    level: config.debugLogging ? "debug" : "info",
+    level: Config.debugLogging ? "debug" : "info",
     transports: [
         //
         // - Write all logs error (and below) to `error.log`.

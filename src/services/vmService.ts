@@ -2,8 +2,9 @@
 import { BaseService } from "./baseService"
 import { Vm, vmRepository } from "../entities/vmEntity";
 import Compute from '@google-cloud/compute'
-import { config } from "../config";
+import { Config } from "../config";
 import PollManager from "../utils/pollManager";
+import operationPromisefy from "../utils/promisefy";
 
 
 export class VmService extends BaseService<Vm>{
@@ -56,14 +57,19 @@ export class VmService extends BaseService<Vm>{
     async updateSnapshot() {
         const compute = new Compute();
         // 删除旧的snapshot
-        const snapshot = compute.snapshot(config.SNAPSHOT)
-        const res = await snapshot.delete()
-        console.log(res)
-        // 重新创建snapshot
-        const zone = compute.zone(config.SOURCE_DISK_ZONE);
-        const disk = zone.disk(config.SOURCE_DISK);
-        const resc = await PollManager.runTask(10, 10, disk.createSnapshot, disk, config.SNAPSHOT)
-        console.log(resc)
+        const snapshot = compute.snapshot(Config.SNAPSHOT)
+        const [ssoperation] = await snapshot.delete()
+        console.log(ssoperation)
+        const ssmetadata = await operationPromisefy(ssoperation, 'complete', true)
+        if (ssmetadata.status === "DONE" && ssmetadata.progress === 100) {
+            // 重新创建snapshot
+            const zone = compute.zone(Config.SOURCE_DISK_ZONE);
+            const disk = zone.disk(Config.SOURCE_DISK);
+            const res = disk.createSnapshot(Config.SNAPSHOT)
+            console.log(res)
+
+        }
+
     }
 
 }
