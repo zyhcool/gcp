@@ -49,7 +49,6 @@ export default class DiskController {
             sourceSnapshot: 'projects/gcp-test-293701/global/snapshots/snapshot-1',
             sizeGb: 20,
             type: "projects/gcp-test-293701/zones/us-central1-a/diskTypes/pd-standard",
-            // zone: "projects/gcp-test-293701/zones/us-central1-a",
         }
         const res = await zone.createDisk("test-disk", config)
         const [disk, operation, apiResponse] = res

@@ -2,11 +2,18 @@
 import { BaseService } from "./baseService"
 import { Vm, vmRepository } from "../entities/vmEntity";
 import Compute from '@google-cloud/compute'
+import { config } from "../config";
+import PollManager from "../utils/pollManager";
 
 
 export class VmService extends BaseService<Vm>{
     repository = vmRepository
 
+    /**
+     * @description 随机获取某个region（地区）下面的zone（区域）
+     * @param {} 
+     * @return {} 
+     */
     async getZone(regionName: string): Promise<string> {
         const compute = new Compute();
 
@@ -27,6 +34,11 @@ export class VmService extends BaseService<Vm>{
 
     }
 
+    /**
+     * @description 根据机器类型和配置，拼接出url所需格式
+     * @param {} 
+     * @return {} 
+     */
     getMachineType(machineType: string, vcpu: number, ram: number) {
         machineType = machineType.toLowerCase()
         if (machineType === 'n1') {
@@ -39,6 +51,19 @@ export class VmService extends BaseService<Vm>{
 
     async saveVM(vm: Vm) {
         await this.save(vm)
+    }
+
+    async updateSnapshot() {
+        const compute = new Compute();
+        // 删除旧的snapshot
+        const snapshot = compute.snapshot(config.SNAPSHOT)
+        const res = await snapshot.delete()
+        console.log(res)
+        // 重新创建snapshot
+        const zone = compute.zone(config.SOURCE_DISK_ZONE);
+        const disk = zone.disk(config.SOURCE_DISK);
+        const resc = await PollManager.runTask(10, 10, disk.createSnapshot, disk, config.SNAPSHOT)
+        console.log(resc)
     }
 
 }

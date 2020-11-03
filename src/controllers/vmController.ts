@@ -9,6 +9,7 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import PollManager from "../utils/pollManager";
 import { VmService } from "../services/vmService";
+import { config } from "../config";
 
 
 @Controller("/vm")
@@ -54,8 +55,8 @@ export default class VmController {
         @QueryParam("location") location: string,
 
     ) {
-        const PROJECT_URL = "projects/gcp-test-293701"
-        const SNAPSHOT = "snapshot-1"
+        const PROJECT_URL = config.PROJECT_URL;
+        const SNAPSHOT = config.SNAPSHOT;
 
         const compute = new Compute();
         const region = compute.region(location);
@@ -71,13 +72,13 @@ export default class VmController {
         const addressName = 'test-staticip-' + num
 
         // 创建启动磁盘，使用快照snapshot-1
-        const config = {
+        const diskConfig = {
             name: diskName,
             sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
             sizeGb: 20,
             type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
         }
-        const diskRes = await zone.createDisk(diskName, config)
+        const diskRes = await zone.createDisk(diskName, diskConfig)
         console.log('diskRes:-----------------\n', diskRes);
 
 
@@ -124,12 +125,14 @@ export default class VmController {
         })
     }
 
+    @Get('/updateSnapshot')
+    async updss() {
+        await this.vmService.updateSnapshot()
+    }
+
 }
 
-// function sleep(time) {
-//     return new Promise((resolve,reject)=>{
-//         setTimeout(() => {
-//             resolve()
-//         }, time*1000);
-//     })
-// }
+
+
+
+
