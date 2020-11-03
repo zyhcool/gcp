@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { config } from "../config";
+import { Config } from "../config";
 import { logger } from "../logger";
 import bluebird from "bluebird"
 
@@ -18,7 +18,7 @@ export async function dbConnect() {
     //     "useUnifiedTopology": true
     // }).catch((error: string) => console.log("TypeORM connection error: ", error));
 
-    const mongodbUrl = config.databaseUrl
+    const mongodbUrl = Config.databaseUrl
     mongoose.Promise = bluebird
     mongoose.connect(mongodbUrl, {
         useNewUrlParser: true,
