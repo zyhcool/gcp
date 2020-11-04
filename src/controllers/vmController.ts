@@ -103,7 +103,7 @@ export default class VmController {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\npasswd << EOF\n${rootPassword}\n${rootPassword}\nEOF`
+                        value: `#! /bin/bash\n/var/local/startup.sh ${rootPassword}`
                     }
                 ]
             },
