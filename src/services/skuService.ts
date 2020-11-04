@@ -6,6 +6,7 @@ import path from "path";
 import { logger } from "../logger";
 import myNet from "../net";
 import ping from 'ping'
+import { Config } from "../config";
 
 
 export class SkuService extends BaseService<Sku>{
@@ -38,7 +39,8 @@ export class SkuService extends BaseService<Sku>{
     }
 
     static async getSkusData() {
-        const url = 'https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=AIzaSyD2JOj2edBUaoPDSsFmzkMBzy5ov9bYcDA'
+        const key = Config.SKU_KEY
+        const url = `https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=${key}`
 
         let result = [];
         let response = await myNet.get(url);

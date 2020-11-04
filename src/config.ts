@@ -8,6 +8,7 @@ interface IConfig {
     SNAPSHOT: string;
     SOURCE_DISK: string;
     SOURCE_DISK_ZONE: string;
+    SKU_KEY: string;
 }
 
 const isDevMode = process.env.NODE_ENV === "dev";
@@ -22,6 +23,7 @@ const Config: IConfig = {
     SNAPSHOT: "snapshot-1",
     SOURCE_DISK: "gcp-test",
     SOURCE_DISK_ZONE: "us-central1-a",
+    SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s"
 };
 
 export { Config };
