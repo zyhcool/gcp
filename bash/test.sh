@@ -8,8 +8,8 @@ then
     echo $1 > name
     ## 重定向
     $pwd/name.sh << EOF
-    JJ
-    DD
+    $1
+    $1
 EOF
 
     # 获取命令输出，保存到变量
