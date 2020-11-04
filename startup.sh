@@ -19,4 +19,6 @@ EOF
 
     # 重启BFChain
     echo "success" > /var/local/mysh/success
+    
+    reboot
 fi
