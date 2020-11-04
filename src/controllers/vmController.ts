@@ -35,13 +35,14 @@ export default class VmController {
 
     @Get("/")
     async get(
-        @QueryParam("diskname") diskname: string
+        @QueryParam("vmName") vmName: string,
+        @QueryParam("zoneName") zoneName: string
     ) {
         // Creates a client
         const compute = new Compute();
 
-        const zone = compute.zone('us-central1-a')
-        const vm = zone.vm("gcp-test")
+        const zone = compute.zone(zoneName)
+        const vm = zone.vm(vmName)
         const res = await vm.get();
         console.log(res[0])
         console.log(res[0].metadata.networkInterfaces[0].networkIP)

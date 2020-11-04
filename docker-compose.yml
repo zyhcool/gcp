@@ -21,7 +21,6 @@ services:
     volumes:
       - /data/logs/gcp:/usr/src/gcp/logs
       - /var/projects/gcp/auth:/usr/src/gcp/auth
-      - /var/projects/gcp/bash:/var/local/mysh
     ports:
       - 5050:5050
     networks:
