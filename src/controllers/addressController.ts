@@ -47,8 +47,6 @@ export default class AddressController {
             networkTier: "PREMIUM",
             addressType: "EXTERNAL",
             address: "34.122.87.160",
-
-
         }
         const res = await address.create(options)
         console.log(res)

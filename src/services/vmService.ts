@@ -1,15 +1,121 @@
 
 import { BaseService } from "./baseService"
-import { Vm, vmRepository } from "../entities/vmEntity";
+import { IVmConfig, Vm, vmRepository } from "../entities/vmEntity";
 import Compute from '@google-cloud/compute'
 import { Config } from "../config";
-import PollManager from "../utils/pollManager";
 import operationPromisefy from "../utils/promisefy";
 import generatePasswd from 'generate-password'
+import { getUUid } from "../utils/uuidGenerator";
 
 
 export class VmService extends BaseService<Vm>{
     repository = vmRepository
+
+    /**
+     * @description 购买虚拟机实例
+     * @param {} 
+     * @return {} 
+     */
+    async createVm(
+        orderId: string,
+        time: number,
+        config: IVmConfig,
+    ) {
+
+        let { machineType, location, vcpu, ram } = config;
+        const PROJECT_URL = Config.PROJECT_URL;
+        const SNAPSHOT = Config.SNAPSHOT;
+
+        const compute = new Compute();
+        const region = compute.region(location);
+
+        const zoneName = await this.getZone(location)
+        const zone = compute.zone(zoneName)
+
+        const machineType_str = this.getMachineType(machineType, vcpu, ram)
+
+        const diskName = "disk-" + orderId
+        const vmName = 'vm-' + orderId
+        const addressName = 'staticip-' + orderId
+
+        // 判断快照是否准备完毕
+        const snapshot = compute.snapshot(Config.SNAPSHOT)
+        const [ssMetadata] = await snapshot.getMetadata()
+        if (ssMetadata.status !== "READY") {
+            throw new Error('snapshot is not ready')
+        }
+
+
+        // 创建启动磁盘，使用快照snapshot-1
+        const diskConfig = {
+            name: diskName,
+            sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
+            sizeGb: 20,
+            type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
+        }
+        // 生成root登录密码
+        const rootPassword = this.getRootPasswd();
+        const vmconfig = {
+            disks: [
+                {
+                    type: "PERSISTENT", // default is PERSISTENT
+                    boot: true, // 是否为启动磁盘
+                    mode: "READ_WRITE", // READ_WRITE or READ_ONLY,default is READ_WRITE 
+                    autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
+                    source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
+                }
+            ],
+            metadata: {
+                items: [
+                    {
+                        key: 'startup-script',
+                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword}`
+                    }
+                ]
+            },
+            http: true,
+            https: true,
+            machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
+        }
+        const [disk, diskOperation] = await zone.createDisk(diskName, diskConfig)
+        console.log('disk:\n---------------\n---------------', disk, diskOperation);
+        const diskMetadata = await operationPromisefy(diskOperation, "complete", true);
+        console.log('diskMetadata:\n---------------\n---------------', diskMetadata);
+
+        if (diskMetadata.status === "DONE" && diskMetadata.progress === 100) {
+            const [vm, vmoperation] = await zone.createVM(vmName, vmconfig)
+            console.log('vm:\n---------------\n---------------', vm, vmoperation);
+            const vmMetadata = await vm.waitFor('RUNNING')
+            console.log('vmMetadata:\n---------------\n---------------', vmMetadata);
+            const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
+            const address = region.address(addressName);
+
+            const options = {
+                name: addressName,
+                networkTier: "PREMIUM",
+                addressType: "EXTERNAL",
+                address: externalIP,
+            }
+            const [, addOperation] = await address.create(options)
+            const addressMetadata = await operationPromisefy(addOperation, 'complete', true)
+
+            if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
+                // 处理业务逻辑
+                const expiredAt = new Date(vmMetadata.creationTimestamp + time * 30 * 24 * 60 * 60 * 1000)
+                await this.saveVM({
+                    ip: externalIP,
+                    vmName,
+                    gcpInstanceId: vm.metadata.targetId,
+                    bootDisk: diskName,
+                    rootUser: 'root',
+                    rootPassword,
+                    expiredAt,
+                })
+                return true
+
+            }
+        }
+    }
 
     /**
      * @description 随机获取某个region（地区）下面的zone（区域）
@@ -92,6 +198,7 @@ export class VmService extends BaseService<Vm>{
                     console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000) // 测试数据：167.164 s
                 }
             })
+            return true
         }
     }
 }

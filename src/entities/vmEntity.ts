@@ -8,6 +8,7 @@ export class Vm {
     bootDisk: string;
     rootUser: string;
     rootPassword: string;
+    expiredAt: Date;
 
 
 }
@@ -21,6 +22,15 @@ const vmSchema = new mongoose.Schema({
     bootDisk: String,
     rootUser: String,
     rootPassword: String,
+    expiredAt: Date,
 }, { timestamps: true })
 
 export const vmRepository = mongoose.model<VmDocument>("Vm", vmSchema)
+
+
+export interface IVmConfig {
+    machineType: string,
+    vcpu: number,
+    ram: number,
+    location: string,
+}

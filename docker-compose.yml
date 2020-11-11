@@ -7,7 +7,7 @@ services:
     volumes:
       - ~/data/db/gcp:/data/db
     ports:
-      - 27017:27017
+      - 8625:27017
     networks:
       - gcp-web-net
   web:
