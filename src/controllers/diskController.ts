@@ -8,6 +8,8 @@ import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
+import { Worker } from "worker_threads";
+import { resolve } from "path";
 
 
 @Controller("/disk")
@@ -86,7 +88,13 @@ export default class DiskController {
 
     @Get('/updateSnapshot')
     async updss() {
-        await this.vmService.updateSnapshot()
+        const worker = new Worker(resolve(process.cwd(), './dist/workers/snapshotUpdate.js'))
+        worker.on('message', (data) => {
+            if (data.event === 'done') {
+                console.log('workjs: ', data.result)
+            }
+        })
+        worker.postMessage({ cmd: 'start' })
     }
 
 }
