@@ -66,13 +66,13 @@ export default class VmController {
         //     throw new Error('createVm failed')
         // }
 
-        const worker = new Worker(resolve(process.cwd(), './work.js'))
+        const worker = new Worker(resolve(process.cwd(), './dist/work.js'))
         worker.on('message', (data) => {
             if (data.event === 'done') {
                 console.log('workjs: ', data.result)
             }
         })
-        worker.postMessage({ cmd: 'start', fn: this.vmService.updateSnapshot, ctx: this.vmService, args: [orderId, time, { machineType, vcpu, ram, location }] })
+        worker.postMessage({ cmd: 'start', args: [orderId, time, { machineType, vcpu, ram, location }] })
     }
 
 
