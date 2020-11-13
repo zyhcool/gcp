@@ -84,6 +84,7 @@ export default class GcpManager {
             }
         }
         catch (e) {
+            CloudOrderCache.fail(this.orderId);
             logger.error(`\n${e.message}\n${e.stack}`)
             this.start(false)
         }
