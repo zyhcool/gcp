@@ -6,7 +6,7 @@ import operationPromisefy from "../utils/promisefy";
 import generatePasswd from 'generate-password'
 import CloudOrderCache from "../utils/cloudOrderCache";
 import { orderRepository } from "../entities/orderEntity";
-import { instanceRepository } from "../entities/InstanceEntity";
+import { instanceRepository } from "../entities/instanceEntity";
 
 
 export default class GcpManager {
@@ -202,7 +202,7 @@ export default class GcpManager {
      * @param {} 
      * @return {} 
      */
-    public async updateSnapshot() {
+    public static async updateSnapshot() {
         const compute = new Compute();
         const now = Date.now()
         // 删除旧的snapshot

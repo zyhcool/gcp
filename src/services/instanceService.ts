@@ -1,6 +1,6 @@
 
+import { Instance, instanceRepository } from "../entities/instanceEntity"
 import { BaseService } from "./baseService"
-import { Instance, instanceRepository } from "../entities/InstanceEntity";
 
 
 export class InstanceService extends BaseService<Instance>{
