@@ -99,7 +99,7 @@ export default class GcpManager {
      * @param {} 
      * @return {} 
      */
-    private async createVm(
+    public async createVm(
         orderId: string,
         time: number,
         config: IVmConfig,
@@ -146,11 +146,10 @@ export default class GcpManager {
                     boot: true, // 是否为启动磁盘
                     mode: "READ_WRITE", // READ_WRITE or READ_ONLY,default is READ_WRITE 
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
-                    // source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
                     initializeParams: {
                         diskName,
-                        // sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
-                        sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
+                        sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
+                        // sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
                         diskType: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
                         sizeGb: 20,
                     },
