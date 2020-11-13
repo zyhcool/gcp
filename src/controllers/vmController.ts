@@ -8,8 +8,6 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
 import { getUUid } from "../utils/uuidGenerator";
-import { Worker } from "worker_threads";
-import { resolve } from "path";
 import GcpManager from "../cloud/gcpManager";
 
 

@@ -16,7 +16,7 @@ export default class GcpManager {
     private left: number; // 实例个数
     private config: IVmConfig;
     private startTime: Date; // 开始时间
-    private expireTime: number = 2 * 60 * 60 * 1000;
+    private expireTime: number = 10 * 60 * 1000; // 10分钟
     constructor(orderId: string, time: number, num: number, config: IVmConfig) {
         this.init(orderId, time, num, config)
     }
@@ -47,6 +47,7 @@ export default class GcpManager {
         if (!orderCache) {
             return
         }
+        logger.debug(orderCache)
 
         // 已完成全部部署
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
@@ -109,6 +110,7 @@ export default class GcpManager {
         let { machineType, location, vcpu, ram } = config;
         const PROJECT_URL = Config.PROJECT_URL;
         const SNAPSHOT = Config.SNAPSHOT;
+        const IMAGE = Config.IMAGE;
 
         const compute = new Compute();
         const region = compute.region(location);
@@ -148,8 +150,7 @@ export default class GcpManager {
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
                     initializeParams: {
                         diskName,
-                        sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
-                        // sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
+                        sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
                         diskType: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
                         sizeGb: 20,
                     },
@@ -181,10 +182,8 @@ export default class GcpManager {
         // console.log('diskMetadata:\n---------------\n---------------', diskMetadata);
 
         // if (diskMetadata.status === "DONE" && diskMetadata.progress === 100) {
-        const [vm, vmoperation] = await zone.createVM(vmName, vmconfig)
-        console.log('vm:\n---------------\n---------------', vm, vmoperation);
+        const [vm] = await zone.createVM(vmName, vmconfig)
         const vmMetadata = await vm.waitFor('RUNNING')
-        console.log('vmMetadata:\n---------------\n---------------', vmMetadata);
         const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
         const address = region.address(addressName);
 
@@ -225,7 +224,6 @@ export default class GcpManager {
         // 删除旧的snapshot
         const snapshot = compute.snapshot(Config.SNAPSHOT)
         const [ssoperation] = await snapshot.delete()
-        console.log(ssoperation)
         const ssmetadata = await operationPromisefy(ssoperation, 'complete', true)
         if (ssmetadata.status === "DONE" && ssmetadata.progress === 100) {
             // 重新创建snapshot
@@ -262,7 +260,6 @@ export default class GcpManager {
             return reg.test(zone.id)
         }).map(zone => zone.id)
 
-        console.log(zones)
         return zones[0];
 
     }
