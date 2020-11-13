@@ -111,9 +111,9 @@ export default class GcpManager {
 
         const machineType_str = this.getMachineType(machineType, vcpu, ram)
 
-        const diskName = "disk-" + orderId + index
-        const vmName = 'vm-' + orderId + index
-        const addressName = 'staticip-' + orderId + index
+        const diskName = "disk-" + orderId + '-' + index
+        const vmName = 'vm-' + orderId + '-' + index
+        const addressName = 'staticip-' + orderId + '-' + index
 
         // 判断快照是否准备完毕
         const snapshot = compute.snapshot(Config.SNAPSHOT)
@@ -186,7 +186,7 @@ export default class GcpManager {
 
             if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
                 // 处理业务逻辑
-                const expiredAt = new Date(new Date(vmMetadata.creationTimestamp).getTime() + time * 30 * 24 * 60 * 60 * 1000)
+                const expiredAt = (new Date(vmMetadata[0].creationTimestamp)).setSeconds(time * 30 * 24 * 60 * 60)
                 return {
                     ip: externalIP,
                     vmName,
