@@ -47,7 +47,7 @@ export default class GcpManager {
         if (!orderCache) {
             return
         }
-        logger.debug(orderCache)
+        console.log(orderCache)
 
         // 已完成全部部署
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
@@ -65,6 +65,7 @@ export default class GcpManager {
         }
 
         try {
+            if (this.left === 1) throw new Error('ren wei error')
             let res = await this.createVm(this.orderId, this.time, this.config, this.left)
             // 部署成功，缓存更新
             if (res) {
