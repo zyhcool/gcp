@@ -131,12 +131,12 @@ export default class GcpManager {
 
 
         // 创建启动磁盘，使用快照snapshot-1
-        const diskConfig = {
-            name: diskName,
-            sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
-            sizeGb: 20,
-            type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
-        }
+        // const diskConfig = {
+        //     name: diskName,
+        //     sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
+        //     sizeGb: 20,
+        //     type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
+        // }
         // 生成root登录密码
         const rootPassword = this.getRootPasswd();
         const vmconfig = {
@@ -148,8 +148,11 @@ export default class GcpManager {
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
                     // source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
                     initializeParams: {
-                        sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
+                        diskName,
+                        // sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
+                        sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
                         diskType: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
+                        sizeGb: 20,
                     },
                 }
             ],
@@ -173,43 +176,43 @@ export default class GcpManager {
             https: true,
             machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
         }
-        const [disk, diskOperation] = await zone.createDisk(diskName, diskConfig)
-        console.log('disk:\n---------------\n---------------', disk, diskOperation);
-        const diskMetadata = await operationPromisefy(diskOperation, "complete", true);
-        console.log('diskMetadata:\n---------------\n---------------', diskMetadata);
+        // const [disk, diskOperation] = await zone.createDisk(diskName, diskConfig)
+        // console.log('disk:\n---------------\n---------------', disk, diskOperation);
+        // const diskMetadata = await operationPromisefy(diskOperation, "complete", true);
+        // console.log('diskMetadata:\n---------------\n---------------', diskMetadata);
 
-        if (diskMetadata.status === "DONE" && diskMetadata.progress === 100) {
-            const [vm, vmoperation] = await zone.createVM(vmName, vmconfig)
-            console.log('vm:\n---------------\n---------------', vm, vmoperation);
-            const vmMetadata = await vm.waitFor('RUNNING')
-            console.log('vmMetadata:\n---------------\n---------------', vmMetadata);
-            const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
-            const address = region.address(addressName);
+        // if (diskMetadata.status === "DONE" && diskMetadata.progress === 100) {
+        const [vm, vmoperation] = await zone.createVM(vmName, vmconfig)
+        console.log('vm:\n---------------\n---------------', vm, vmoperation);
+        const vmMetadata = await vm.waitFor('RUNNING')
+        console.log('vmMetadata:\n---------------\n---------------', vmMetadata);
+        const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
+        const address = region.address(addressName);
 
-            const options = {
-                name: addressName,
-                networkTier: "PREMIUM",
-                addressType: "EXTERNAL",
-                address: externalIP,
-            }
-            const [, addOperation] = await address.create(options)
-            const addressMetadata = await operationPromisefy(addOperation, 'complete', true)
-
-            if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
-                // 处理业务逻辑
-                const expiredAt = (new Date(vmMetadata[0].creationTimestamp)).setSeconds(time * 30 * 24 * 60 * 60)
-                return {
-                    ip: externalIP,
-                    vmName,
-                    gcpInstanceId: vm.metadata.targetId,
-                    bootDisk: diskName,
-                    rootUser: 'root',
-                    rootPassword,
-                    expiredAt,
-                }
-
-            }
+        const options = {
+            name: addressName,
+            networkTier: "PREMIUM",
+            addressType: "EXTERNAL",
+            address: externalIP,
         }
+        const [, addOperation] = await address.create(options)
+        const addressMetadata = await operationPromisefy(addOperation, 'complete', true)
+
+        if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
+            // 处理业务逻辑
+            const expiredAt = (new Date(vmMetadata[0].creationTimestamp)).setSeconds(time * 30 * 24 * 60 * 60)
+            return {
+                ip: externalIP,
+                vmName,
+                gcpInstanceId: vm.metadata.targetId,
+                bootDisk: diskName,
+                rootUser: 'root',
+                rootPassword,
+                expiredAt,
+            }
+
+        }
+        // }
     }
 
     /**
