@@ -5,7 +5,7 @@ export class Instance {
     iporderId: string;
     ip: string;
     gcpInstanceId: string;
-    expireAt: Date;
+    expiredAt: Date;
     vmName: string;
     bootDisk: string;
     rootUser: string;
@@ -20,7 +20,7 @@ const InstanceSchema = new mongoose.Schema({
     iporderId: String,
     ip: String,
     gcpInstanceId: String,
-    expireAt: Date,
+    expiredAt: Date,
     vmName: String,
     bootDisk: String,
     rootUser: String,

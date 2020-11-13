@@ -49,6 +49,7 @@ export default class GcpManager {
 
         // 已完成全部部署
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
+            console.log('全部成功')
             await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: 0 } })
             CloudOrderCache.delete(this.orderId)
             return;
@@ -61,7 +62,7 @@ export default class GcpManager {
             return
         }
 
-        let res = await this.createVm(this.orderId, this.time, this.config)
+        let res = await this.createVm(this.orderId, this.time, this.config, this.left)
         // 部署成功，缓存更新
         if (res) {
             await instanceRepository.create(Object.assign({}, res, {
@@ -73,6 +74,7 @@ export default class GcpManager {
         }
         // 部署失败
         else {
+            console.log('一个失败')
             CloudOrderCache.fail(this.orderId);
             return this.start(false)
         }
@@ -80,6 +82,7 @@ export default class GcpManager {
 
     private async finish() {
         // order 数据同步，成功几个，失败几个
+        console.log('结束了')
         await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: this.left } })
         CloudOrderCache.delete(this.orderId)
     }
@@ -93,6 +96,7 @@ export default class GcpManager {
         orderId: string,
         time: number,
         config: IVmConfig,
+        index: number,
     ) {
 
         let { machineType, location, vcpu, ram } = config;
@@ -107,9 +111,9 @@ export default class GcpManager {
 
         const machineType_str = this.getMachineType(machineType, vcpu, ram)
 
-        const diskName = "disk-" + orderId
-        const vmName = 'vm-' + orderId
-        const addressName = 'staticip-' + orderId
+        const diskName = "disk-" + orderId + index
+        const vmName = 'vm-' + orderId + index
+        const addressName = 'staticip-' + orderId + index
 
         // 判断快照是否准备完毕
         const snapshot = compute.snapshot(Config.SNAPSHOT)
@@ -182,7 +186,7 @@ export default class GcpManager {
 
             if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
                 // 处理业务逻辑
-                const expireAt = new Date(new Date(vmMetadata.creationTimestamp).getTime() + time * 30 * 24 * 60 * 60 * 1000)
+                const expiredAt = new Date(new Date(vmMetadata.creationTimestamp).getTime() + time * 30 * 24 * 60 * 60 * 1000)
                 return {
                     ip: externalIP,
                     vmName,
@@ -190,7 +194,7 @@ export default class GcpManager {
                     bootDisk: diskName,
                     rootUser: 'root',
                     rootPassword,
-                    expireAt,
+                    expiredAt,
                 }
 
             }

@@ -25,7 +25,7 @@ const Config: IConfig = {
     SOURCE_DISK: "gcp-test",
     SOURCE_DISK_ZONE: "us-central1-a",
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
-    NETWORK_TAGS: [''],
+    NETWORK_TAGS: ['mongodb'],
 };
 
 export { Config };
