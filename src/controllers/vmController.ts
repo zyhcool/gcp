@@ -10,6 +10,7 @@ import { VmService } from "../services/vmService";
 import { getUUid } from "../utils/uuidGenerator";
 import { Worker } from "worker_threads";
 import { resolve } from "path";
+import GcpManager from "../cloud/gcpManager";
 
 
 @Controller("/vm")
@@ -61,21 +62,20 @@ export default class VmController {
 
         orderId = orderId || getUUid()
         const time = 1
-        // let res = await this.vmService.createVm(orderId, time, { machineType, vcpu, ram, location })
-        // if (!res) {
-        //     throw new Error('createVm failed')
-        // }
+        const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location })
+        gcp.start(true);
+        return true;
 
-        const worker = new Worker(resolve(process.cwd(), './dist/workers/createVM.js'))
-        worker.on('message', async (data) => {
-            if (data.event === 'done') {
-                if (data.result) {
-                    await this.vmService.saveVM(data.result)
-                }
-                console.log('workjs: ', data.result)
-            }
-        })
-        worker.postMessage({ cmd: 'start', args: { orderId, time, config: { machineType, vcpu, ram, location } } })
+        // const worker = new Worker(resolve(process.cwd(), './dist/workers/createVM.js'))
+        // worker.on('message', async (data) => {
+        //     if (data.event === 'done') {
+        //         if (data.result) {
+        //             await this.vmService.saveVM(data.result)
+        //         }
+        //         console.log('workjs: ', data.result)
+        //     }
+        // })
+        // worker.postMessage({ cmd: 'start', args: { orderId, time, config: { machineType, vcpu, ram, location } } })
     }
 
 

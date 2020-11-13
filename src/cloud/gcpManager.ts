@@ -1,19 +1,95 @@
 import { Config } from "../config";
 
-import { IVmConfig, Vm, vmRepository } from "../entities/vmEntity";
+import { IVmConfig } from "../entities/vmEntity";
 import Compute from '@google-cloud/compute'
 import operationPromisefy from "../utils/promisefy";
 import generatePasswd from 'generate-password'
+import CloudOrderCache from "../utils/cloudOrderCache";
+import { orderRepository } from "../entities/orderEntity";
+import { instanceRepository } from "../entities/InstanceEntity";
 
 
-class GcpManager {
+export default class GcpManager {
+    private orderId: string;
+    private time: number; // 月
+    private left: number; // 实例个数
+    private config: IVmConfig;
+    private startTime: Date; // 开始时间
+    private expireTime: number = 2 * 60 * 60 * 1000;
+    constructor(orderId: string, time: number, num: number, config: IVmConfig) {
+        this.init(orderId, time, num, config)
+    }
+
+    private init(orderId: string, time: number, num: number, config: IVmConfig) {
+        this.orderId = orderId;
+        this.time = time;
+        this.left = num;
+        this.config = config;
+        this.startTime = new Date()
+    }
+
+
+
+    public async start(isNew: boolean = true) {
+        if (isNew) {
+            CloudOrderCache.set(this.orderId, {
+                orderId: this.orderId,
+                num: this.left,
+                config: this.config,
+                completed: 0,
+                failed: 0,
+            })
+        }
+
+        // 缓存是否存在或被删除
+        const orderCache = CloudOrderCache.get(this.orderId)
+        if (!orderCache) {
+            return
+        }
+
+        // 已完成全部部署
+        if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
+            await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: 0 } })
+            CloudOrderCache.delete(this.orderId)
+            return;
+        }
+
+        // start是否超时
+        if (Date.now() - this.startTime.getTime() > this.expireTime) {
+            await this.finish()
+            console.log('start超时')
+            return
+        }
+
+        let res = await this.createVm(this.orderId, this.time, this.config)
+        // 部署成功，缓存更新
+        if (res) {
+            await instanceRepository.create(Object.assign({}, res, {
+                iporderId: this.orderId,
+            }))
+            CloudOrderCache.complete(this.orderId)
+            this.left--;
+            return this.start(false);
+        }
+        // 部署失败
+        else {
+            CloudOrderCache.fail(this.orderId);
+            return this.start(false)
+        }
+    }
+
+    private async finish() {
+        // order 数据同步，成功几个，失败几个
+        await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: this.left } })
+        CloudOrderCache.delete(this.orderId)
+    }
 
     /**
      * @description 购买虚拟机实例
      * @param {} 
      * @return {} 
      */
-    public async createVm(
+    private async createVm(
         orderId: string,
         time: number,
         config: IVmConfig,
@@ -70,6 +146,14 @@ class GcpManager {
                     }
                 ]
             },
+            // 网络标记
+            tags: {
+                items: [
+                    'http-server',
+                    'https-server',
+                    ...Config.NETWORK_TAGS,
+                ]
+            },
             http: true,
             https: true,
             machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
@@ -98,7 +182,7 @@ class GcpManager {
 
             if (addressMetadata.status === "DONE" && addressMetadata.progress === 100) {
                 // 处理业务逻辑
-                const expiredAt = new Date(vmMetadata.creationTimestamp + time * 30 * 24 * 60 * 60 * 1000)
+                const expireAt = new Date(new Date(vmMetadata.creationTimestamp).getTime() + time * 30 * 24 * 60 * 60 * 1000)
                 return {
                     ip: externalIP,
                     vmName,
@@ -106,7 +190,7 @@ class GcpManager {
                     bootDisk: diskName,
                     rootUser: 'root',
                     rootPassword,
-                    expiredAt,
+                    expireAt,
                 }
 
             }
@@ -199,6 +283,3 @@ class GcpManager {
     }
 
 }
-
-const gcpManager = new GcpManager()
-export default gcpManager;
