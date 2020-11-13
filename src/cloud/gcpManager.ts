@@ -16,7 +16,7 @@ export default class GcpManager {
     private left: number; // 实例个数
     private config: IVmConfig;
     private startTime: Date; // 开始时间
-    private expireTime: number = 10 * 60 * 1000; // 10分钟
+    private expireTime: number = 5 * 60 * 1000; // 5分钟
     constructor(orderId: string, time: number, num: number, config: IVmConfig) {
         this.init(orderId, time, num, config)
     }
