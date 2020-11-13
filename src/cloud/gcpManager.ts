@@ -7,6 +7,7 @@ import generatePasswd from 'generate-password'
 import CloudOrderCache from "../utils/cloudOrderCache";
 import { orderRepository } from "../entities/orderEntity";
 import { instanceRepository } from "../entities/instanceEntity";
+import { logger } from "../logger";
 
 
 export default class GcpManager {
@@ -62,21 +63,27 @@ export default class GcpManager {
             return
         }
 
-        let res = await this.createVm(this.orderId, this.time, this.config, this.left)
-        // 部署成功，缓存更新
-        if (res) {
-            await instanceRepository.create(Object.assign({}, res, {
-                iporderId: this.orderId,
-            }))
-            CloudOrderCache.complete(this.orderId)
-            this.left--;
-            return this.start(false);
+        try {
+            let res = await this.createVm(this.orderId, this.time, this.config, this.left)
+            // 部署成功，缓存更新
+            if (res) {
+                await instanceRepository.create(Object.assign({}, res, {
+                    iporderId: this.orderId,
+                }))
+                CloudOrderCache.complete(this.orderId)
+                this.left--;
+                return this.start(false);
+            }
+            // 部署失败
+            else {
+                console.log('一个失败')
+                CloudOrderCache.fail(this.orderId);
+                return this.start(false)
+            }
         }
-        // 部署失败
-        else {
-            console.log('一个失败')
-            CloudOrderCache.fail(this.orderId);
-            return this.start(false)
+        catch (e) {
+            logger.error(`\n${e.message}\n${e.stack}`)
+            this.start(false)
         }
     }
 
@@ -139,7 +146,11 @@ export default class GcpManager {
                     boot: true, // 是否为启动磁盘
                     mode: "READ_WRITE", // READ_WRITE or READ_ONLY,default is READ_WRITE 
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
-                    source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
+                    // source: `${PROJECT_URL}/zones/${zoneName}/disks/${diskName}`,
+                    initializeParams: {
+                        sourceImage: `${PROJECT_URL}/global/images/${'image-1'}`,
+                        diskType: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
+                    },
                 }
             ],
             metadata: {
