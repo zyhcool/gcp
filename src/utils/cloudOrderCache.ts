@@ -48,7 +48,7 @@ export default class CloudOrderCache {
      */
     static fail(orderId: string) {
         let cache = this.get(orderId)
-        cache.value.faild++
+        cache.value.failed++
         Cache.update(this.prefix + orderId, cache)
     }
 
