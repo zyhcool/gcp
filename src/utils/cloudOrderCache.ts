@@ -4,9 +4,9 @@ import { Cache } from "./cache";
 export interface ICloudOrderCache {
     orderId: string
     num: number
-    config: IVmConfig,
-    completed: number;
-    failed: number;
+    config: IVmConfig
+    completed: number
+    failed: number
 }
 
 export default class CloudOrderCache {

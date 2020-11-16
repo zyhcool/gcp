@@ -8,6 +8,7 @@ import CloudOrderCache from "../utils/cloudOrderCache";
 import { orderRepository } from "../entities/orderEntity";
 import { instanceRepository } from "../entities/instanceEntity";
 import { logger } from "../logger";
+import { spawn } from 'child_process'
 
 
 export default class GcpManager {
@@ -74,19 +75,25 @@ export default class GcpManager {
                 }))
                 CloudOrderCache.complete(this.orderId)
                 this.left--;
-                return this.start(false);
+                setTimeout(() => {
+                    this.start(false)
+                }, 0);
             }
             // 部署失败
             else {
                 console.log('一个失败')
                 CloudOrderCache.fail(this.orderId);
-                return this.start(false)
+                setTimeout(() => {
+                    this.start(false)
+                }, 0);
             }
         }
         catch (e) {
             CloudOrderCache.fail(this.orderId);
             logger.error(`\n${e.message}\n${e.stack}`)
-            return this.start(false)
+            setTimeout(() => {
+                this.start(false)
+            }, 0);
         }
     }
 
@@ -102,7 +109,7 @@ export default class GcpManager {
      * @param {} 
      * @return {} 
      */
-    public async createVm(
+    private async createVm(
         orderId: string,
         time: number,
         config: IVmConfig,
@@ -173,6 +180,9 @@ export default class GcpManager {
                     'https-server',
                     ...Config.NETWORK_TAGS,
                 ]
+            },
+            labels: {
+                orderId,
             },
             http: true,
             https: true,
@@ -296,6 +306,67 @@ export default class GcpManager {
             numbers: true,
         })
         return pwd;
+    }
+
+    /**
+     * @description 获取配额数据
+     * @param {} 
+     * @return {} 
+     */
+    public getQuotas(region: string, keys: string[]) {
+        return new Promise((resolve, reject) => {
+            const spawn = require('child_process').spawn;
+            const free = spawn('gcloud', ['compute', 'regions', 'describe', region])
+
+            // 捕获标准输出并将其打印到控制台 
+            free.stdout.on('data', function (data) {
+                data = data.toString('utf8')
+                const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
+                const res = [...data.matchAll(reg)][0][0]
+                let itemStrArr = res.split('\n-')
+
+                let obj = {}
+                itemStrArr.forEach((str, i) => {
+                    if (i === 0) return;
+                    let item = str.split('\n')
+                    let limit = 0;
+                    let usage = 0;
+                    let itemKey = ''
+                    item.forEach((kv) => {
+                        kv = kv.trim()
+                        let [key, value] = kv.split(': ')
+                        if (key === 'metric') {
+                            itemKey = value;
+                        } else if (key === 'limit') {
+                            limit = Number.parseFloat(value)
+                        } else if (key === 'usage') {
+                            usage = Number.parseFloat(value)
+                        }
+                    })
+                    if (!keys.includes(itemKey)) {
+                        return;
+                    }
+                    obj[itemKey] = limit - usage
+                })
+                resolve(obj)
+
+            });
+
+            // 捕获标准错误输出并将其打印到控制台 
+            free.stderr.on('data', function (data) {
+                reject(data)
+            });
+
+            // 捕获错误输出并将其打印到控制台 
+            free.on('error', function (err) {
+                reject(err)
+            });
+
+            // 注册子进程关闭事件 
+            free.on('exit', function (code, signal) {
+                console.log('child process eixt ,exit:' + code);
+            });
+        })
     }
 
 }
