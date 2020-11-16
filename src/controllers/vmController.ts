@@ -9,6 +9,7 @@ import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
 import { getUUid } from "../utils/uuidGenerator";
 import GcpManager from "../cloud/gcpManager";
+import { orderRepository } from "../entities/orderEntity";
 
 
 @Controller("/vm")
@@ -59,6 +60,7 @@ export default class VmController {
     ) {
 
         orderId = orderId || getUUid()
+        await orderRepository.create({ orderId, left: 0 })
         const time = 1
         const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location })
         gcp.start(true);

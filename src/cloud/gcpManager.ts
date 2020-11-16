@@ -85,7 +85,7 @@ export default class GcpManager {
                 CloudOrderCache.fail(this.orderId);
                 setTimeout(() => {
                     this.start(false)
-                }, 0);
+                }, 1000);
             }
         }
         catch (e) {
@@ -93,7 +93,7 @@ export default class GcpManager {
             logger.error(`\n${e.message}\n${e.stack}`)
             setTimeout(() => {
                 this.start(false)
-            }, 0);
+            }, 1000);
         }
     }
 
