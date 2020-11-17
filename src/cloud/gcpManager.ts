@@ -316,7 +316,6 @@ export default class GcpManager {
      */
     private getQuotas(region: string, keys: string[]): Promise<{ CUPS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
         return new Promise((resolve, reject) => {
-            const spawn = require('child_process').spawn;
             const free = spawn('gcloud', ['compute', 'regions', 'describe', region])
 
             // 捕获标准输出并将其打印到控制台 
@@ -382,6 +381,7 @@ export default class GcpManager {
             'IN_USE_ADDRESSES', // 使用中的ip地址（包括临时和预留）
             'INSTANCES', // 实例
         ])
+        console.log(quotas)
         if (
             config.vcpu * num > quotas.CUPS ||
             20 * num > quotas.DISKS_TOTAL_GB ||
