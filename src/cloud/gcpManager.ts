@@ -314,7 +314,7 @@ export default class GcpManager {
      * @param {} 
      * @return {} 
      */
-    private getQuotas(region: string, keys: string[]): Promise<{ CUPS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
+    private getQuotas(region: string, keys: string[]): Promise<{ CPUS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
         return new Promise((resolve, reject) => {
             const free = spawn('gcloud', ['compute', 'regions', 'describe', region])
 
@@ -322,7 +322,9 @@ export default class GcpManager {
             free.stdout.on('data', function (data) {
                 data = data.toString('utf8')
                 const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
-                const res = [...data.matchAll(reg)][0][0]
+                const resArr = [...data.matchAll(reg)]
+                console.log(resArr)
+                const res = resArr[0][0]
                 let itemStrArr = res.split('\n-')
 
                 let obj: any = {}
@@ -383,13 +385,13 @@ export default class GcpManager {
         ])
         console.log(quotas)
         if (
-            config.vcpu * num > quotas.CUPS ||
+            config.vcpu * num > quotas.CPUS ||
             20 * num > quotas.DISKS_TOTAL_GB ||
             1 * num > quotas.IN_USE_ADDRESSES ||
             num > quotas.INSTANCES
         ) {
             throw new Error(`该订单所需资源超出配额，无法部署。剩余配额：\n
-            vcpu：${quotas.CUPS}\n
+            vcpu：${quotas.CPUS}\n
             硬盘：${quotas.DISKS_TOTAL_GB}\n
             ip：${quotas.IN_USE_ADDRESSES}\n
             实例：${quotas.INSTANCES}\n
