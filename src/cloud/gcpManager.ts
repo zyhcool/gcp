@@ -322,10 +322,9 @@ export default class GcpManager {
             free.stdout.on('data', function (data) {
                 data = data.toString('utf8')
                 const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
-                const resArr = [...data.matchAll(reg)]
-                console.log(resArr)
-                const res = resArr[0][0]
-                let itemStrArr = res.split('\n-')
+                const res = Array.from(data.matchAll(reg), m => m[0])
+                console.log(res, '\n', res[0])
+                let itemStrArr = res[0].split('\n-')
 
                 let obj: any = {}
                 itemStrArr.forEach((str, i) => {
@@ -351,7 +350,7 @@ export default class GcpManager {
                     obj[itemKey] = limit - usage
                 })
                 resolve(obj)
-
+                free.kill()
             });
 
             // 捕获标准错误输出并将其打印到控制台 

@@ -41,7 +41,10 @@
 
 function getAvailable(data, keys) {
     const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
-    const res = [...data.matchAll(reg)][0][0]
+    let res = Array.from(data.matchAll(reg), m => m[0])
+    console.log(res[0])
+    return
+
     let itemStrArr = res.split('\n-')
 
     let obj = {}
