@@ -34,6 +34,7 @@ export default class GcpManager {
 
     public async start(isNew: boolean = true) {
         if (isNew) {
+            await this.validateQuotas(this.config, this.left)
             CloudOrderCache.set(this.orderId, {
                 orderId: this.orderId,
                 num: this.left,
@@ -66,7 +67,7 @@ export default class GcpManager {
         }
 
         try {
-            if (this.left === 1) throw new Error('ren wei error')
+            // if (this.left === 1) throw new Error('ren wei error')
             let res = await this.createVm(this.orderId, this.time, this.config, this.left)
             // 部署成功，缓存更新
             if (res) {
@@ -313,7 +314,7 @@ export default class GcpManager {
      * @param {} 
      * @return {} 
      */
-    public getQuotas(region: string, keys: string[]) {
+    private getQuotas(region: string, keys: string[]): Promise<{ CUPS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
         return new Promise((resolve, reject) => {
             const spawn = require('child_process').spawn;
             const free = spawn('gcloud', ['compute', 'regions', 'describe', region])
@@ -325,7 +326,7 @@ export default class GcpManager {
                 const res = [...data.matchAll(reg)][0][0]
                 let itemStrArr = res.split('\n-')
 
-                let obj = {}
+                let obj: any = {}
                 itemStrArr.forEach((str, i) => {
                     if (i === 0) return;
                     let item = str.split('\n')
@@ -367,6 +368,35 @@ export default class GcpManager {
                 console.log('child process eixt ,exit:' + code);
             });
         })
+    }
+
+    /**
+     * @description 检查配额是否够用
+     * @param {} 
+     * @return {} 
+     */
+    public async validateQuotas(config: IVmConfig, num: number) {
+        const quotas = await this.getQuotas(config.location, [
+            'CPUS', // cpu
+            'DISKS_TOTAL_GB', // 持久化硬盘
+            'IN_USE_ADDRESSES', // 使用中的ip地址（包括临时和预留）
+            'INSTANCES', // 实例
+        ])
+        if (
+            config.vcpu * num > quotas.CUPS ||
+            20 * num > quotas.DISKS_TOTAL_GB ||
+            1 * num > quotas.IN_USE_ADDRESSES ||
+            num > quotas.INSTANCES
+        ) {
+            throw new Error(`该订单所需资源超出配额，无法部署。剩余配额：\n
+            vcpu：${quotas.CUPS}\n
+            硬盘：${quotas.DISKS_TOTAL_GB}\n
+            ip：${quotas.IN_USE_ADDRESSES}\n
+            实例：${quotas.INSTANCES}\n
+            `)
+        }
+
+
     }
 
 }
