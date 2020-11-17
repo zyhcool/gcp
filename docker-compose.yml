@@ -21,6 +21,7 @@ services:
     volumes:
       - /data/logs/gcp:/usr/src/gcp/logs
       - /var/projects/gcp/auth:/usr/src/gcp/auth
+      - /usr/bin/gcloud:/usr/bin/gcloud
     ports:
       - 5050:5050
     networks:
