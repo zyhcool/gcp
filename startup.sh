@@ -16,15 +16,15 @@ prepareJq
 
 # 确保授权文件存放路径存在
 prepareDir(){
-    if [[ ! -e /path/to/bfchain ]]
+    if [[ ! -e /path/to/bfchainauthfile ]]
     then
-        mkdir -p /path/to/bfchain
+        mkdir -p /path/to/bfchainauthfile
     fi
 }
 prepareDir
 
 # 根据某些条件判断bfchain是否已经授权成功并启动
-if [[ ! -e /path/to/bfchain ]]
+if ! ps -ef | grep -w bcf | grep -v grep > /dev/null
 then
     sudo su root
     # 修改root用户密码
