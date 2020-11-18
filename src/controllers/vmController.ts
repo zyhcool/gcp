@@ -62,7 +62,7 @@ export default class VmController {
         orderId = orderId || getUUid()
         await orderRepository.create({ orderId, left: 0 })
         const time = 1
-        const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location })
+        const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
         gcp.start(true);
         // gcp.createVm(orderId, time, { machineType, vcpu, ram, location }, 1)
         return true;

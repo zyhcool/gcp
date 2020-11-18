@@ -1,4 +1,5 @@
 
+type Method = 'post' | 'put' | 'get' | 'delete'
 interface IConfig {
     port: number;
     debugLogging: boolean;
@@ -10,7 +11,17 @@ interface IConfig {
     SOURCE_DISK_ZONE: string;
     SKU_KEY: string;
     NETWORK_TAGS: Array<string>;
-    IMAGE: string;
+    // IMAGE: string;
+    EOG: {
+        baseUrl: string,
+        loginPath: string,
+        loginMethod: Method,
+        authPath: string,
+        authMethod: Method,
+        email: string,
+        password: string,
+        tokenExpireTime: number, // s
+    };
 }
 
 const isDevMode = process.env.NODE_ENV === "dev";
@@ -27,7 +38,17 @@ const Config: IConfig = {
     SOURCE_DISK_ZONE: "us-central1-a",
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
-    IMAGE: 'image-1'
+    // IMAGE: 'image-1',
+    EOG: {
+        baseUrl: 'http://localhost:3100',
+        loginPath: '/login',
+        loginMethod: 'post',
+        authPath: '/authorize',
+        authMethod: 'put',
+        email: 'zhengyuhua@bnqkl.net',
+        password: 'fakepwd', // 哈希过的密码
+        tokenExpireTime: 24 * 60 * 60,
+    }
 };
 
 export { Config };

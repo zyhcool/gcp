@@ -18,7 +18,7 @@ export default class CloudOrderCache {
         return Cache.get(this.prefix + orderId)
     }
 
-    static set(orderId: string, value: any, expire: number = this.expire) {
+    static set(orderId: string, value: ICloudOrderCache, expire: number = this.expire) {
         const exist = Cache.get(this.prefix + orderId)
         if (exist && exist.expireTime < new Date() && exist.value.num > exist.value.completed) {
             throw new Error('没结束')

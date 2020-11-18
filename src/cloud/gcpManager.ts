@@ -18,15 +18,17 @@ export default class GcpManager {
     private config: IVmConfig;
     private startTime: Date; // 开始时间
     private expireTime: number = 5 * 60 * 1000; // 5分钟
-    constructor(orderId: string, time: number, num: number, config: IVmConfig) {
-        this.init(orderId, time, num, config)
+    private user: string; // 
+    constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
+        this.init(orderId, time, num, config, user)
     }
 
-    private init(orderId: string, time: number, num: number, config: IVmConfig) {
+    private init(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         this.orderId = orderId;
         this.time = time;
         this.left = num;
         this.config = config;
+        this.user = user;
         this.startTime = new Date()
     }
 
@@ -68,7 +70,7 @@ export default class GcpManager {
 
         try {
             // if (this.left === 1) throw new Error('ren wei error')
-            let res = await this.createVm(this.orderId, this.time, this.config, this.left)
+            let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
                 await instanceRepository.create(Object.assign({}, res, {
@@ -115,12 +117,12 @@ export default class GcpManager {
         time: number,
         config: IVmConfig,
         index: number,
+        user: string,
     ) {
 
         let { machineType, location, vcpu, ram } = config;
         const PROJECT_URL = Config.PROJECT_URL;
         const SNAPSHOT = Config.SNAPSHOT;
-        const IMAGE = Config.IMAGE;
 
         const compute = new Compute();
         const region = compute.region(location);
@@ -141,16 +143,12 @@ export default class GcpManager {
             throw new Error('snapshot is not ready')
         }
 
-
-        // 创建启动磁盘，使用快照snapshot-1
-        // const diskConfig = {
-        //     name: diskName,
-        //     sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
-        //     sizeGb: 20,
-        //     type: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
-        // }
-        // 生成root登录密码
         const rootPassword = this.getRootPasswd();
+        const url = Config.EOG.baseUrl + Config.EOG.authPath
+        // EOG需要的
+        const orderNumber = orderId
+        const target = user
+
         const vmconfig = {
             disks: [
                 {
@@ -170,7 +168,7 @@ export default class GcpManager {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword}`
+                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword} ${url} ${orderNumber} ${target}`
                     }
                 ]
             },
@@ -189,12 +187,7 @@ export default class GcpManager {
             https: true,
             machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
         }
-        // const [disk, diskOperation] = await zone.createDisk(diskName, diskConfig)
-        // console.log('disk:\n---------------\n---------------', disk, diskOperation);
-        // const diskMetadata = await operationPromisefy(diskOperation, "complete", true);
-        // console.log('diskMetadata:\n---------------\n---------------', diskMetadata);
 
-        // if (diskMetadata.status === "DONE" && diskMetadata.progress === 100) {
         const [vm] = await zone.createVM(vmName, vmconfig)
         const vmMetadata = await vm.waitFor('RUNNING')
         const externalIP = vmMetadata[0].networkInterfaces[0].accessConfigs[0].natIP
@@ -223,7 +216,6 @@ export default class GcpManager {
             }
 
         }
-        // }
     }
 
     /**
@@ -310,20 +302,25 @@ export default class GcpManager {
     }
 
     /**
-     * @description 获取配额数据
+     * @description 获取配额数据。命令行：'gcloud compute regions describe us-central1'
      * @param {} 
      * @return {} 
      */
     private getQuotas(region: string, keys: string[]): Promise<{ CPUS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
         return new Promise((resolve, reject) => {
-            const free = spawn('gcloud', ['compute', 'regions', 'describe', region])
+            const subProcess = spawn('gcloud', ['compute', 'regions', 'describe', region])
+            let data
 
-            // 捕获标准输出并将其打印到控制台 
-            free.stdout.on('data', function (data) {
+            // 捕获标准输出
+            subProcess.stdout.on('data', (chunk) => {
+                data += chunk;
+            })
+
+            // 标准输出结束后处理业务
+            subProcess.stdout.on('end', function () {
                 data = data.toString('utf8')
                 const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
                 const res = Array.from(data.matchAll(reg), m => m[0])
-                console.log(res, '\n', res[0])
                 let itemStrArr = res[0].split('\n-')
 
                 let obj: any = {}
@@ -350,21 +347,21 @@ export default class GcpManager {
                     obj[itemKey] = limit - usage
                 })
                 resolve(obj)
-                free.kill()
+                subProcess.unref()
             });
 
-            // 捕获标准错误输出并将其打印到控制台 
-            free.stderr.on('data', function (data) {
+            // 捕获标准错误输出
+            subProcess.stderr.on('data', function (data) {
                 reject(data)
             });
 
-            // 捕获错误输出并将其打印到控制台 
-            free.on('error', function (err) {
+            // 捕获错误输出
+            subProcess.on('error', function (err) {
                 reject(err)
             });
 
             // 注册子进程关闭事件 
-            free.on('exit', function (code, signal) {
+            subProcess.on('exit', function (code, signal) {
                 console.log('child process eixt ,exit:' + code);
             });
         })
@@ -389,15 +386,15 @@ export default class GcpManager {
             1 * num > quotas.IN_USE_ADDRESSES ||
             num > quotas.INSTANCES
         ) {
-            throw new Error(`该订单所需资源超出配额，无法部署。剩余配额：\n
+            throw new Error(`该订单所需资源超出该地区配额，无法部署。剩余配额：\n
             vcpu：${quotas.CPUS}\n
-            硬盘：${quotas.DISKS_TOTAL_GB}\n
+            硬盘：${quotas.DISKS_TOTAL_GB} (GB)\n
             ip：${quotas.IN_USE_ADDRESSES}\n
             实例：${quotas.INSTANCES}\n
             `)
         }
-
-
     }
+
+
 
 }

@@ -1,28 +1,10 @@
 #! /bin/bash
 
-if [[ -e /e/demo/googleCloudPlatform/bash/test.sh ]]
-then
-    pwd=$(cd $(dirname $0); pwd)
+# 检查并安装jq
+url=http://localhost:3100/authorize
+  # 获取序列号
+    seqNum=$(./bash/seqNum.sh)
+    echo $seqNum
 
-    echo $pwd
-    echo $1 > name
-    ## 重定向
-    $pwd/name.sh << EOF
-    $1
-    $1
-EOF
-
-    # 获取命令输出，保存到变量
-    seqNum=$(./seqNum.sh)
-
-    # http请求，下载文件到指定地址
-    # https://down.sandai.net/thunderx/XunLeiWebSetup10.1.38.890.exe
-
-    # curl https://down.sandai.net/thunderx/XunLeiWebSetup10.1.38.890.exe --output ./xunlei.exe
-
-    echo $(dirname $0)
-else
-    echo "jjjjjjjj"
-fi
-
-
+    # http请求获取授权文件
+    curl -X PUT $url -d "email=fake&s=${seqNum}"
