@@ -5,13 +5,19 @@ import Compute from '@google-cloud/compute'
 import operationPromisefy from "../utils/promisefy";
 import generatePasswd from 'generate-password'
 import CloudOrderCache from "../utils/cloudOrderCache";
-import { orderRepository } from "../entities/orderEntity";
-import { instanceRepository } from "../entities/instanceEntity";
 import { logger } from "../logger";
 import { spawn } from 'child_process'
+import NetworkTest from "../utils/networkTest";
+import events from "events"
 
 
-export default class GcpManager {
+enum GcpEvent {
+    timeout = 'timeout',
+    complete = 'complete',
+    success = 'success'
+}
+
+export default class GcpManager extends events.EventEmitter {
     private orderId: string;
     private time: number; // 月
     private left: number; // 实例个数
@@ -20,6 +26,7 @@ export default class GcpManager {
     private expireTime: number = 5 * 60 * 1000; // 5分钟
     private user: string; // 
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
+        super()
         this.init(orderId, time, num, config, user)
     }
 
@@ -33,10 +40,14 @@ export default class GcpManager {
     }
 
 
-
     public async start(isNew: boolean = true) {
+        if (!NetworkTest.test()) {
+            throw new Error('network error!')
+        }
         if (isNew) {
-            await this.validateQuotas(this.config, this.left)
+            // 检查配额是否足够
+            // await this.validateQuotas(this.config, this.left)
+
             CloudOrderCache.set(this.orderId, {
                 orderId: this.orderId,
                 num: this.left,
@@ -46,9 +57,10 @@ export default class GcpManager {
             })
         }
 
-        // 缓存是否存在或被删除
+        // 缓存是否存在或已过期
         const orderCache = CloudOrderCache.get(this.orderId)
-        if (!orderCache) {
+        if (!orderCache || orderCache.expireTime < new Date()) {
+            await this.finish()
             return
         }
         console.log(orderCache)
@@ -56,7 +68,8 @@ export default class GcpManager {
         // 已完成全部部署
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
             console.log('全部成功')
-            await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: 0 } })
+            this.emit(GcpEvent.complete)
+            // await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: 0 } })
             CloudOrderCache.delete(this.orderId)
             return;
         }
@@ -64,7 +77,6 @@ export default class GcpManager {
         // start是否超时
         if (Date.now() - this.startTime.getTime() > this.expireTime) {
             await this.finish()
-            console.log('start超时')
             return
         }
 
@@ -73,9 +85,10 @@ export default class GcpManager {
             let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
-                await instanceRepository.create(Object.assign({}, res, {
-                    iporderId: this.orderId,
-                }))
+                this.emit(GcpEvent.success, res);
+                // await instanceRepository.create(Object.assign({}, res, {
+                //     iporderId: this.orderId,
+                // }))
                 CloudOrderCache.complete(this.orderId)
                 this.left--;
                 setTimeout(() => {
@@ -102,8 +115,9 @@ export default class GcpManager {
 
     private async finish() {
         // order 数据同步，成功几个，失败几个
-        console.log('结束了')
-        await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: this.left } })
+        console.log('超时结束')
+        this.emit(GcpEvent.timeout, this.left)
+        // await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: this.left } })
         CloudOrderCache.delete(this.orderId)
     }
 

@@ -10,6 +10,7 @@ import { VmService } from "../services/vmService";
 import { getUUid } from "../utils/uuidGenerator";
 import GcpManager from "../cloud/gcpManager";
 import { orderRepository } from "../entities/orderEntity";
+import { OrderService } from "../services/orderService";
 
 
 @Controller("/vm")
@@ -17,6 +18,9 @@ export default class VmController {
 
     @Inject(type => SkuService)
     skuService: SkuService;
+
+    @Inject(type => OrderService)
+    orderService: OrderService;
 
     @Inject(type => VmService)
     vmService: VmService;
@@ -63,20 +67,21 @@ export default class VmController {
         await orderRepository.create({ orderId, left: 0 })
         const time = 1
         const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
-        gcp.start(true);
-        // gcp.createVm(orderId, time, { machineType, vcpu, ram, location }, 1)
-        return true;
+        gcp.start();
+        gcp.on('complete', () => {
+            orderRepository.updateOne({ orderId }, { $set: { left: 0 } })
+        })
+        gcp.on('success', (data) => {
+            orderRepository.create(Object.assign({}, data, {
+                iporderId: orderId,
+            }))
+        })
+        gcp.on('timeout', (left: number) => {
+            orderRepository.updateOne({ orderId }, { $set: { left } })
+        })
 
-        // const worker = new Worker(resolve(process.cwd(), './dist/workers/createVM.js'))
-        // worker.on('message', async (data) => {
-        //     if (data.event === 'done') {
-        //         if (data.result) {
-        //             await this.vmService.saveVM(data.result)
-        //         }
-        //         console.log('workjs: ', data.result)
-        //     }
-        // })
-        // worker.postMessage({ cmd: 'start', args: { orderId, time, config: { machineType, vcpu, ram, location } } })
+
+        return true;
     }
 
 
