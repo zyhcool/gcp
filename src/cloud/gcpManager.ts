@@ -9,6 +9,7 @@ import { logger } from "../logger";
 import { spawn } from 'child_process'
 import NetworkTest from "../utils/networkTest";
 import events from "events"
+import { orderRepository, OrderStatus } from "../entities/orderEntity";
 
 
 enum GcpEvent {
@@ -227,6 +228,7 @@ export default class GcpManager extends events.EventEmitter {
                 rootUser: 'root',
                 rootPassword,
                 expiredAt,
+                zone: zoneName,
             }
 
         }
@@ -407,6 +409,57 @@ export default class GcpManager extends events.EventEmitter {
             实例：${quotas.INSTANCES}\n
             `)
         }
+    }
+
+
+    static async dealFailOrderInstances() {
+        // 找到无效订单下的instance
+        let orders = await orderRepository.aggregate([
+            {
+                $match: { status: OrderStatus.unvalid }
+            },
+            {
+                $lookup: {
+                    from: 'instances',
+                    let: { iporderId: '$orderId' },
+                    pipeline: [
+                        {
+                            $match: { $expr: { $eq: ['$iporderId', '$$iporderId'] } },
+                        },
+                        {
+                            $project: { vmName: 1, status: 1, addressName: 1, zone: 1 }
+                        }
+                    ],
+                    as: 'instances'
+                }
+            },
+            { $match: { $expr: { $gt: [{ $size: '$instances' }, 0] } } },
+            {
+                $project: { instances: 1 }
+            }
+        ])
+        const vms = []
+        orders.forEach(order => {
+            order.instances.forEach(instance => {
+                this.deleteVM(instance)
+            })
+        })
+
+    }
+
+    static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
+        const regionName = instance.zone.substring(0, instance.zone.length - 2)
+        const compute = new Compute();
+        const zone = compute.zone(zoneName);
+        const vm = zone.vm(vmName);
+        const [operation] = await vm.delete()
+
+        // const vmMetadata = await operationPromisefy(operation, 'complete', true)
+        // if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
+    }
+
+    static async releaseAddresses(addressNames: Array<string>) {
+
     }
 
 

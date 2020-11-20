@@ -8,9 +8,12 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
 import { getUUid } from "../utils/uuidGenerator";
-import GcpManager from "../cloud/gcpManager";
-import { orderRepository } from "../entities/orderEntity";
+import Gcp from "../cloud/gcpManager";
+import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { OrderService } from "../services/orderService";
+import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
+import operationPromisefy from "../utils/promisefy";
+import Axios from "axios";
 
 
 @Controller("/vm")
@@ -64,16 +67,19 @@ export default class VmController {
     ) {
 
         orderId = orderId || getUUid()
-        await orderRepository.create({ orderId, left: 0 })
+        await orderRepository.create({ orderId, left: 0, status: OrderStatus.deploying })
         const time = 1
-        const gcp = new GcpManager(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
+        const gcp = new Gcp(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
         gcp.start();
         gcp.on('complete', () => {
             orderRepository.updateOne({ orderId }, { $set: { left: 0 } })
+            // 订单实例全部成功，交付实例
+            instanceRepository.updateMany({ iporderId: orderId }, { $set: { status: instanceStatus.delivery } })
         })
         gcp.on('success', (data) => {
             orderRepository.create(Object.assign({}, data, {
                 iporderId: orderId,
+                status: instanceStatus.deploy,
             }))
         })
         gcp.on('timeout', (left: number) => {
@@ -82,6 +88,29 @@ export default class VmController {
 
 
         return true;
+    }
+
+    @Get('/deletevm')
+    async deletevm(
+        @QueryParam("vmName") vmName: string,
+        @QueryParam("addressName") addressName: number,
+        @QueryParam("ip") ip: number,
+        @QueryParam("zoneName") zoneName: string,
+    ) {
+        const regionName = zoneName.substring(0, zoneName.length - 2)
+        const compute = new Compute();
+        // const zone = compute.zone(zoneName);
+        // const vm = zone.vm(vmName);
+        // const [operation] = await vm.delete()
+
+        // const vmMetadata = await operationPromisefy(operation, 'complete', true)
+        // if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
+        const region = compute.region(regionName)
+        console.log(regionName)
+        const address = region.address(addressName)
+        let ha = await Axios.delete('https://compute.googleapis.com/compute/v1/projects/gcp-test-293701/regions/us-central1/addresses/addressname')
+        console.log(ha)
+        // }
     }
 
 

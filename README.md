@@ -33,7 +33,7 @@
 
 ### 设置环境变量 
 
-> [adf](http://www.baidu.com)
+> [身份验证入门](https://cloud.google.com/docs/authentication/getting-started)
 
 即服务账号密钥的存放路径：
 GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json

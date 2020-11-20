@@ -10,6 +10,9 @@ export class Instance {
     bootDisk: string;
     rootUser: string;
     rootPassword: string;
+    status: instanceStatus;
+    zone: string;
+    addressName: string;
 
 
 }
@@ -25,7 +28,15 @@ const InstanceSchema = new mongoose.Schema({
     bootDisk: String,
     rootUser: String,
     rootPassword: String,
+    status: Number,
+    zone: String,
+    addressName: String,
 
 }, { timestamps: true })
 
 export const instanceRepository = mongoose.model<InstanceDocument>("Instance", InstanceSchema)
+
+export enum instanceStatus {
+    deploy = 1,
+    delivery = 2,
+}
