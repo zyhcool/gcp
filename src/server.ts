@@ -8,7 +8,7 @@ import path from "path";
 
 import { logger, loggerMid } from "./logger";
 import { Config } from "./config";
-import { cron } from "./cron";
+import { cron, skusCron } from "./cron";
 import { useKoaServer, Action, useContainer } from "routing-controllers";
 import { Container } from "typedi";
 import { dbConnect } from "./init/dbConnection";
@@ -50,6 +50,7 @@ const setupServer = async () => {
     console.log(`Server running on port ${Config.port}`);
 
     cron.start();
+    skusCron.start()
 };
 
 // 处理异常

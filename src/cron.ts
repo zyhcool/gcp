@@ -19,4 +19,4 @@ const cron = new CronJob('0 0 * * * *', () => {
 
 });
 
-export { skusCron, };
+export { skusCron, cron };
