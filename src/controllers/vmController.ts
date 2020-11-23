@@ -83,7 +83,7 @@ export default class VmController {
             }))
         })
         gcp.on('timeout', (left: number) => {
-            orderRepository.updateOne({ orderId }, { $set: { left } })
+            orderRepository.updateOne({ orderId }, { $set: { left, status: OrderStatus.unvalid } })
         })
 
 

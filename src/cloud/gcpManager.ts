@@ -47,7 +47,7 @@ export default class GcpManager extends events.EventEmitter {
         }
         if (isNew) {
             // 检查配额是否足够
-            // await this.validateQuotas(this.config, this.left)
+            await this.validateQuotas(this.config, this.left)
 
             CloudOrderCache.set(this.orderId, {
                 orderId: this.orderId,
@@ -70,7 +70,6 @@ export default class GcpManager extends events.EventEmitter {
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
             console.log('全部成功')
             this.emit(GcpEvent.complete)
-            // await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: 0 } })
             CloudOrderCache.delete(this.orderId)
             return;
         }
@@ -82,14 +81,11 @@ export default class GcpManager extends events.EventEmitter {
         }
 
         try {
-            // if (this.left === 1) throw new Error('ren wei error')
+            if (this.left === 1) throw new Error('ren wei error')
             let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
-                this.emit(GcpEvent.success, res);
-                // await instanceRepository.create(Object.assign({}, res, {
-                //     iporderId: this.orderId,
-                // }))
+                this.emit(GcpEvent.success, res)
                 CloudOrderCache.complete(this.orderId)
                 this.left--;
                 setTimeout(() => {
@@ -118,7 +114,6 @@ export default class GcpManager extends events.EventEmitter {
         // order 数据同步，成功几个，失败几个
         console.log('超时结束')
         this.emit(GcpEvent.timeout, this.left)
-        // await orderRepository.updateOne({ orderId: this.orderId }, { $set: { left: this.left } })
         CloudOrderCache.delete(this.orderId)
     }
 
@@ -438,7 +433,6 @@ export default class GcpManager extends events.EventEmitter {
                 $project: { instances: 1 }
             }
         ])
-        const vms = []
         orders.forEach(order => {
             order.instances.forEach(instance => {
                 this.deleteVM(instance)
@@ -447,19 +441,32 @@ export default class GcpManager extends events.EventEmitter {
 
     }
 
-    static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
-        const regionName = instance.zone.substring(0, instance.zone.length - 2)
+    private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
+        // const regionName = instance.zone.substring(0, instance.zone.length - 2)
+        const { addressName, vmName, zone: zoneName } = instance;
         const compute = new Compute();
         const zone = compute.zone(zoneName);
         const vm = zone.vm(vmName);
         const [operation] = await vm.delete()
 
-        // const vmMetadata = await operationPromisefy(operation, 'complete', true)
-        // if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
+        const vmMetadata = await operationPromisefy(operation, 'complete', true)
+        if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
+            await this.releaseAddress(addressName)
+        }
     }
 
-    static async releaseAddresses(addressNames: Array<string>) {
+    private static async releaseAddress(addressName: string) {
+        return new Promise((resolve, reject) => {
+            const child = spawn('gcloud', ['compute', 'addresses', 'delete', addressName])
+            child.on('end', () => {
+                resolve(true)
+            })
 
+            child.on('error', (err) => {
+                reject(err)
+            })
+
+        })
     }
 
 
