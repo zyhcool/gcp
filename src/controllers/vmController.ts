@@ -71,20 +71,22 @@ export default class VmController {
         const time = 1
         const gcp = new Gcp(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
         gcp.start();
-        gcp.on('complete', () => {
-            orderRepository.updateOne({ orderId }, { $set: { left: 0 } })
+        gcp.on('complete', async () => {
+            console.log('complete !!')
+            await orderRepository.updateOne({ orderId }, { $set: { left: 0 } })
             // 订单实例全部成功，交付实例
-            instanceRepository.updateMany({ iporderId: orderId }, { $set: { status: instanceStatus.delivery } })
+            await instanceRepository.updateMany({ iporderId: orderId }, { $set: { status: instanceStatus.delivery } })
         })
-        gcp.on('success', (data) => {
-            instanceRepository.create(Object.assign({}, data, {
+        gcp.on('success', async (data) => {
+            console.log('success !!')
+            await instanceRepository.create(Object.assign({}, data, {
                 iporderId: orderId,
                 status: instanceStatus.deploy,
             }))
         })
-        gcp.on('timeout', (left: number) => {
+        gcp.on('timeout', async (left: number) => {
             console.log('timeout !!', orderId)
-            orderRepository.updateOne({ orderId }, { $set: { left, status: OrderStatus.unvalid } })
+            await orderRepository.updateOne({ orderId }, { $set: { left, status: OrderStatus.unvalid } })
         })
 
 
@@ -113,7 +115,6 @@ export default class VmController {
         console.log(ha)
         // }
     }
-
 
 }
 
