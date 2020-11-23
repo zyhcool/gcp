@@ -81,7 +81,7 @@ export default class GcpManager extends events.EventEmitter {
         }
 
         try {
-            if (this.left === 1) throw new Error('ren wei error')
+            if (this.left === 2) throw new Error('ren wei error')
             let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
