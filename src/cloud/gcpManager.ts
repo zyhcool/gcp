@@ -24,7 +24,7 @@ export default class GcpManager extends events.EventEmitter {
     private left: number; // 实例个数
     private config: IVmConfig;
     private startTime: Date; // 开始时间
-    private expireTime: number = 5 * 60 * 1000; // 5分钟
+    private expireTime: number = 3 * 60 * 1000; // 5分钟
     private user: string; // 
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         super()

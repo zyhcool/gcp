@@ -77,12 +77,13 @@ export default class VmController {
             instanceRepository.updateMany({ iporderId: orderId }, { $set: { status: instanceStatus.delivery } })
         })
         gcp.on('success', (data) => {
-            orderRepository.create(Object.assign({}, data, {
+            instanceRepository.create(Object.assign({}, data, {
                 iporderId: orderId,
                 status: instanceStatus.deploy,
             }))
         })
         gcp.on('timeout', (left: number) => {
+            console.log('timeout !!', orderId)
             orderRepository.updateOne({ orderId }, { $set: { left, status: OrderStatus.unvalid } })
         })
 
