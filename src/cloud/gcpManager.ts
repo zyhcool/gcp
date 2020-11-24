@@ -53,11 +53,6 @@ export default class GcpManager extends events.EventEmitter {
             throw new Error('network error!')
         }
 
-        // 判断快照是否就绪
-        const isSSready = await this.isSnapshotReady()
-        if (!isSSready) {
-            throw new Error()
-        }
         if (isNew) {
             // 检查配额是否足够
             await this.validateQuotas(this.config, this.left)
@@ -237,33 +232,6 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     /**
-     * @description 更新snapshot（删除原有snapshot，新建snapshot）
-     * @param {} 
-     * @return {} 
-     */
-    public static async updateSnapshot() {
-        const compute = new Compute();
-        const now = Date.now()
-        // 删除旧的snapshot
-        const snapshot = compute.snapshot(Config.SNAPSHOT)
-        const [ssoperation] = await snapshot.delete()
-        const ssmetadata = await operationPromisefy(ssoperation, 'complete', true)
-        if (ssmetadata.status === "DONE" && ssmetadata.progress === 100) {
-            // 重新创建snapshot
-            const zone = compute.zone(Config.SOURCE_DISK_ZONE);
-            const disk = zone.disk(Config.SOURCE_DISK);
-            const res = await disk.createSnapshot(Config.SNAPSHOT)
-            console.log(res)
-            res[1].on("complete", (metadata) => {
-                if (metadata.status === 'DONE' && metadata.progress === 100) {
-                    console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000) // 测试数据：167.164 s
-                }
-            })
-            return true
-        }
-    }
-
-    /**
      * @description 随机获取某个region（地区）下面的zone（区域）
      * @param {} 
      * @return {} 
@@ -319,20 +287,6 @@ export default class GcpManager extends events.EventEmitter {
         return pwd;
     }
 
-    private async isSnapshotReady() {
-        const compute = new Compute()
-        // 00:00 - 00:20 时间段无法下单
-        // TODO
-
-        // 判断快照是否准备完毕
-        const snapshot = compute.snapshot(Config.SNAPSHOT)
-        const [ssMetadata] = await snapshot.getMetadata()
-        if (ssMetadata.status !== "READY") {
-            return false
-        }
-        return true
-
-    }
 
     /**
      * @description 获取配额数据。命令行：'gcloud compute regions describe us-central1'
@@ -474,8 +428,8 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
-        const regionName = instance.zone.substring(0, instance.zone.length - 2)
         const { addressName, vmName, zone: zoneName } = instance;
+        const regionName = zoneName.substring(0, zoneName.length - 2)
         const compute = new Compute();
         const zone = compute.zone(zoneName);
         const vm = zone.vm(vmName);
@@ -487,7 +441,7 @@ export default class GcpManager extends events.EventEmitter {
         }
     }
 
-    private static async releaseAddress(addressName: string, region: string) {
+    private static releaseAddress(addressName: string, region: string) {
         return new Promise((resolve, reject) => {
             const child = spawn('gcloud', ['compute', 'addresses', 'delete', `--region=${region}`, '-q', addressName])
             child.on('end', () => {
@@ -505,13 +459,19 @@ export default class GcpManager extends events.EventEmitter {
     private async getLatestSnapshot(): Promise<string> {
         const compute = new Compute()
         let [snapshots] = await compute.getSnapshots({
-            maxResults: 1,
+            maxResults: 2,
             orderBy: "creationTimestamp desc",
         })
-
-        console.log(snapshots)
-        const latestSnapshot = snapshots[0]
-        return latestSnapshot.name
+        const [firstSS, secondSS] = snapshots
+        if (firstSS && firstSS.metadata.status === 'READY') {
+            return firstSS.name
+        }
+        else if (secondSS && secondSS.metadata.status === 'READY') {
+            return secondSS.name
+        }
+        else {
+            throw new Error('snapshot is not ready')
+        }
     }
 
 
