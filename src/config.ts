@@ -5,7 +5,7 @@ interface IConfig {
     debugLogging: boolean;
     databaseUrl: string;
     entities: string[];
-    PROJECT_URL: string;
+    PROJECT_ID: string;
     SNAPSHOT: string;
     SOURCE_DISK: string;
     SOURCE_DISK_ZONE: string;
@@ -32,7 +32,7 @@ const Config: IConfig = {
     debugLogging: isDevMode,
     databaseUrl: isDevMode ? "mongodb://localhost:8625/gcp" : "mongodb://database/gcp",
     entities: isDevMode ? ["src/entities/*.ts"] : ["dist/entities/*.js"],
-    PROJECT_URL: "projects/gcp-test-293701",
+    PROJECT_ID: "gcp-test-293701",
     SNAPSHOT: "snapshot-1",
     SOURCE_DISK: "gcp-test",
     SOURCE_DISK_ZONE: "us-central1-a",

@@ -97,4 +97,15 @@ export default class DiskController {
         worker.postMessage({ cmd: 'start' })
     }
 
+    @Get('/latestSnapshot')
+    async latest() {
+        const compute = new Compute()
+        let [snapshots] = await compute.getSnapshots({
+            maxResults: 1,
+            orderBy: "creationTimestamp desc",
+        })
+
+        console.log(snapshots)
+    }
+
 }

@@ -10,6 +10,7 @@ import { spawn } from 'child_process'
 import NetworkTest from "../utils/networkTest";
 import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
+import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
 
 
 enum GcpEvent {
@@ -26,6 +27,7 @@ export default class GcpManager extends events.EventEmitter {
     private startTime: Date; // 开始时间
     private expireTime: number = 3 * 60 * 1000; // 5分钟
     private user: string; // 
+    private snapshot: string; // 最新快照
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         super()
         this.init(orderId, time, num, config, user)
@@ -37,11 +39,15 @@ export default class GcpManager extends events.EventEmitter {
         this.left = num;
         this.config = config;
         this.user = user;
-        this.startTime = new Date()
+        this.startTime = new Date();
     }
 
 
     public async start(isNew: boolean = true) {
+        // 获取最新快照
+        if (!this.snapshot) {
+            this.snapshot = await this.getLatestSnapshot()
+        }
         // 判断网络状态
         if (!NetworkTest.test()) {
             throw new Error('network error!')
@@ -88,7 +94,7 @@ export default class GcpManager extends events.EventEmitter {
         }
 
         try {
-            // if (this.left === 2) throw new Error('ren wei error')
+            if (this.left === 2) throw new Error('ren wei error')
             let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
@@ -138,8 +144,8 @@ export default class GcpManager extends events.EventEmitter {
     ) {
 
         let { machineType, location, vcpu, ram } = config;
-        const PROJECT_URL = Config.PROJECT_URL;
-        const SNAPSHOT = Config.SNAPSHOT;
+        const PROJECT_ID = Config.PROJECT_ID;
+        const snapshot = this.snapshot
 
         const compute = new Compute();
         const region = compute.region(location);
@@ -168,8 +174,8 @@ export default class GcpManager extends events.EventEmitter {
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
                     initializeParams: {
                         diskName,
-                        sourceSnapshot: `${PROJECT_URL}/global/snapshots/${SNAPSHOT}`,
-                        diskType: `${PROJECT_URL}/zones/${zoneName}/diskTypes/pd-standard`,
+                        sourceSnapshot: `projects/${PROJECT_ID}/global/snapshots/${snapshot}`,
+                        diskType: `projects/${PROJECT_ID}/zones/${zoneName}/diskTypes/pd-standard`,
                         sizeGb: 20,
                     },
                 }
@@ -195,7 +201,7 @@ export default class GcpManager extends events.EventEmitter {
             },
             http: true,
             https: true,
-            machineType: `${PROJECT_URL}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
+            machineType: `projects/${PROJECT_ID}/zones/${zoneName}/machineTypes/${machineType_str}`, // n1机型，自定义：1vcpu，内存1024mb
         }
 
         const [vm] = await zone.createVM(vmName, vmconfig)
@@ -448,9 +454,11 @@ export default class GcpManager extends events.EventEmitter {
                 $project: { instances: 1 }
             }
         ])
+        const vmNames = []
         orders.forEach(order => {
             order.instances.forEach(instance => {
                 try {
+                    vmNames.push(...instance.vmName)
                     this.deleteVM(instance)
                 }
                 catch (e) {
@@ -458,6 +466,9 @@ export default class GcpManager extends events.EventEmitter {
                 }
             })
         })
+
+        // 删除
+        await instanceRepository.deleteMany({ vmName: { $in: vmNames }, status: instanceStatus.deploy })
 
     }
 
@@ -487,6 +498,19 @@ export default class GcpManager extends events.EventEmitter {
             })
 
         })
+    }
+
+
+    private async getLatestSnapshot(): Promise<string> {
+        const compute = new Compute()
+        let [snapshots] = await compute.getSnapshots({
+            maxResults: 1,
+            orderBy: "creationTimestamp desc",
+        })
+
+        console.log(snapshots)
+        const latestSnapshot = snapshots[0]
+        return latestSnapshot.name
     }
 
 

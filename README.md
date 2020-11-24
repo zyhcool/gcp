@@ -23,9 +23,11 @@
 
 该密钥用于访问skus的api
 
-### 创建服务账号密钥
+### 创建服务账号及密钥
 
 > [API和服务-凭据](https://console.cloud.google.com/apis/credentials?project=gcp-test-293701)
+
+> [创建服务账号密钥](https://console.cloud.google.com/apis/credentials/serviceaccountkey?_ga=2.52990255.64945074.1606100676-800818242.1591943032&project=gcp-test-293701&folder&organizationId)
 
 该密钥使用json文件保存，用于对资源访问的凭证（资源包括 Compute Engine 等）
 
@@ -41,3 +43,28 @@
 
 即服务账号密钥的存放路径：
 GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
+
+## 配置信息
+1. 项目id
+2. 防火墙规则名称（开放端口）
+3. API密钥
+4. 服务账号及密钥文件
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
