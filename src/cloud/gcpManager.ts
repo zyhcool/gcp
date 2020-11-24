@@ -459,7 +459,7 @@ export default class GcpManager extends events.EventEmitter {
         orders.forEach(order => {
             order.instances.forEach(instance => {
                 try {
-                    vmNames.push(...instance.vmName)
+                    vmNames.push(instance.vmName)
                     this.deleteVM(instance)
                 }
                 catch (e) {
