@@ -42,8 +42,15 @@ export default class GcpManager extends events.EventEmitter {
 
 
     public async start(isNew: boolean = true) {
+        // 判断网络状态
         if (!NetworkTest.test()) {
             throw new Error('network error!')
+        }
+
+        // 判断快照是否就绪
+        const isSSready = await this.isSnapshotReady()
+        if (!isSSready) {
+            throw new Error()
         }
         if (isNew) {
             // 检查配额是否足够
@@ -145,13 +152,6 @@ export default class GcpManager extends events.EventEmitter {
         const diskName = "disk-" + orderId + '-' + index
         const vmName = 'vm-' + orderId + '-' + index
         const addressName = 'staticip-' + orderId + '-' + index
-
-        // 判断快照是否准备完毕
-        const snapshot = compute.snapshot(Config.SNAPSHOT)
-        const [ssMetadata] = await snapshot.getMetadata()
-        if (ssMetadata.status !== "READY") {
-            throw new Error('snapshot is not ready')
-        }
 
         const rootPassword = this.getRootPasswd();
         const url = Config.EOG.baseUrl + Config.EOG.authPath
@@ -312,6 +312,21 @@ export default class GcpManager extends events.EventEmitter {
         return pwd;
     }
 
+    private async isSnapshotReady() {
+        const compute = new Compute()
+        // 00:00 - 00:20 时间段无法下单
+        // TODO
+
+        // 判断快照是否准备完毕
+        const snapshot = compute.snapshot(Config.SNAPSHOT)
+        const [ssMetadata] = await snapshot.getMetadata()
+        if (ssMetadata.status !== "READY") {
+            return false
+        }
+        return true
+
+    }
+
     /**
      * @description 获取配额数据。命令行：'gcloud compute regions describe us-central1'
      * @param {} 
@@ -447,7 +462,7 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
-        // const regionName = instance.zone.substring(0, instance.zone.length - 2)
+        const regionName = instance.zone.substring(0, instance.zone.length - 2)
         const { addressName, vmName, zone: zoneName } = instance;
         const compute = new Compute();
         const zone = compute.zone(zoneName);
@@ -456,13 +471,13 @@ export default class GcpManager extends events.EventEmitter {
 
         const vmMetadata = await operationPromisefy(operation, 'complete', true)
         if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
-            await this.releaseAddress(addressName)
+            await this.releaseAddress(addressName, regionName)
         }
     }
 
-    private static async releaseAddress(addressName: string) {
+    private static async releaseAddress(addressName: string, region: string) {
         return new Promise((resolve, reject) => {
-            const child = spawn('gcloud', ['compute', 'addresses', 'delete', addressName])
+            const child = spawn('gcloud', ['compute', 'addresses', 'delete', `--region=${region}`, '-q', addressName])
             child.on('end', () => {
                 resolve(true)
             })

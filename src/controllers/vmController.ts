@@ -14,6 +14,7 @@ import { OrderService } from "../services/orderService";
 import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
 import operationPromisefy from "../utils/promisefy";
 import Axios from "axios";
+import GcpManager from "../cloud/gcpManager";
 
 
 @Controller("/vm")
