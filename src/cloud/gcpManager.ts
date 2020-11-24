@@ -230,6 +230,7 @@ export default class GcpManager extends events.EventEmitter {
                 rootPassword,
                 expiredAt,
                 zone: zoneName,
+                addressName,
             }
 
         }
