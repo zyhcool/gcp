@@ -1,21 +1,11 @@
 
 
-function ite1(n) {
-    console.log(n)
-    if (n === 60000) return
-    process.nextTick(ite1, ++n)
-}
 
 
+const crypto = require("crypto")
 
-function ite2(n) {
-    console.log(n)
-    if (n === 60000) return
-    setTimeout(() => {
-        ite2(++n)
-    }, 0);
-}
 
-// ite2(0)
+console.log(crypto.createHash('sha256').update('S0urG1ug').digest('hex'))
+
 
 

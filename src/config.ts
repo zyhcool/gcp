@@ -32,13 +32,13 @@ const Config: IConfig = {
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
     EOG: {
-        baseUrl: 'http://localhost:3100',
+        baseUrl: 'http://34.96.179.189:880',
         loginPath: '/login',
         loginMethod: 'post',
         authPath: '/authorize',
-        authMethod: 'put',
-        email: 'zhengyuhua@bnqkl.net',
-        password: 'fakepwd', // 哈希过的密码
+        authMethod: 'post',
+        email: '13105027620@163.com',
+        password: '5c82bd64111990e96805554be1b25a16e656f86119fe622ac6213be0b0db07b4', // 哈希过的密码
         tokenExpireTime: 24 * 60 * 60,
     }
 };

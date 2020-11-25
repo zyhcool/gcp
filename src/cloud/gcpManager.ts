@@ -11,6 +11,7 @@ import NetworkTest from "../utils/networkTest";
 import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
+import { GcloudCli } from "../utils/gcloudCli";
 
 
 enum GcpEvent {
@@ -289,78 +290,12 @@ export default class GcpManager extends events.EventEmitter {
 
 
     /**
-     * @description 获取配额数据。命令行：'gcloud compute regions describe us-central1'
-     * @param {} 
-     * @return {} 
-     */
-    private getQuotas(region: string, keys: string[]): Promise<{ CPUS: number, DISKS_TOTAL_GB: number, IN_USE_ADDRESSES: number, INSTANCES: number, [key: string]: number }> {
-        return new Promise((resolve, reject) => {
-            const subProcess = spawn('gcloud', ['compute', 'regions', 'describe', region])
-            let data
-
-            // 捕获标准输出
-            subProcess.stdout.on('data', (chunk) => {
-                data += chunk;
-            })
-
-            // 标准输出结束后处理业务
-            subProcess.stdout.on('end', function () {
-                data = data.toString('utf8')
-                const reg = /(?<=quotas:)(.|\n)+(?=\nselfLink)/g
-                const res = Array.from(data.matchAll(reg), m => m[0])
-                let itemStrArr = res[0].split('\n-')
-
-                let obj: any = {}
-                itemStrArr.forEach((str, i) => {
-                    if (i === 0) return;
-                    let item = str.split('\n')
-                    let limit = 0;
-                    let usage = 0;
-                    let itemKey = ''
-                    item.forEach((kv) => {
-                        kv = kv.trim()
-                        let [key, value] = kv.split(': ')
-                        if (key === 'metric') {
-                            itemKey = value;
-                        } else if (key === 'limit') {
-                            limit = Number.parseFloat(value)
-                        } else if (key === 'usage') {
-                            usage = Number.parseFloat(value)
-                        }
-                    })
-                    if (!keys.includes(itemKey)) {
-                        return;
-                    }
-                    obj[itemKey] = limit - usage
-                })
-                resolve(obj)
-                subProcess.unref()
-            });
-
-            // 捕获标准错误输出
-            subProcess.stderr.on('data', function (data) {
-                reject(data)
-            });
-
-            // 捕获错误输出
-            subProcess.on('error', function (err) {
-                reject(err)
-            });
-
-            // 注册子进程关闭事件 
-            subProcess.on('exit', function (code, signal) {
-                console.log('child process eixt ,exit:' + code);
-            });
-        })
-    }
-
-    /**
      * @description 检查配额是否够用
      * @param {} 
      * @return {} 
      */
     public async validateQuotas(config: IVmConfig, num: number) {
-        const quotas = await this.getQuotas(config.location, [
+        const quotas = await GcloudCli.getQuotas(config.location, [
             'CPUS', // cpu
             'DISKS_TOTAL_GB', // 持久化硬盘
             'IN_USE_ADDRESSES', // 使用中的ip地址（包括临时和预留）

@@ -49,6 +49,8 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 2. 防火墙规则名称（开放端口）
 3. API密钥
 4. 服务账号及密钥文件
+5. 序列号生成工具的文件路径
+6. 授权码文件的存放路径
 
 
 
@@ -60,6 +62,20 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 
 
 
+
+
+
+
+
+
+
+
+新建项目
+服务器开启gcloud命令行工具：
+    1. 安装 gcloud cli 工具
+    2. 验证登录：gcloud auth login
+    3. 切换gcloud作用的项目：gcloud config set project [PROJECT-ID]（查看当前工作项目：gcloud config get-value [PROJECT-ID]）
+    4. 
 
 
 
