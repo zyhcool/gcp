@@ -29,6 +29,7 @@ export default class GcpManager extends events.EventEmitter {
     private expireTime: number = 3 * 60 * 1000; // 5分钟
     private user: string; // 
     private snapshot: string; // 最新快照
+    private goetoken: string; // 上帝之眼登录token
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         super()
         this.init(orderId, time, num, config, user)
@@ -45,13 +46,15 @@ export default class GcpManager extends events.EventEmitter {
 
 
     public async start(isNew: boolean = true) {
-        // 获取最新快照
-        if (!this.snapshot) {
-            this.snapshot = await this.getLatestSnapshot()
-        }
         // 判断网络状态
         if (!NetworkTest.test()) {
             throw new Error('network error!')
+        }
+
+        // 获取最新快照
+        if (!this.snapshot) {
+            this.snapshot = await this.getLatestSnapshot()
+            console.log('最新快照：', this.snapshot)
         }
 
         if (isNew) {
@@ -91,7 +94,7 @@ export default class GcpManager extends events.EventEmitter {
 
         try {
             if (this.left === 2) throw new Error('ren wei error')
-            let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
+            let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user, this.goetoken)
             // 部署成功，缓存更新
             if (res) {
                 this.emit(GcpEvent.success, res)
@@ -137,6 +140,7 @@ export default class GcpManager extends events.EventEmitter {
         config: IVmConfig,
         index: number,
         user: string,
+        token: string,
     ) {
 
         let { machineType, location, vcpu, ram } = config;
@@ -171,8 +175,8 @@ export default class GcpManager extends events.EventEmitter {
                     initializeParams: {
                         diskName,
                         sourceSnapshot: `projects/${PROJECT_ID}/global/snapshots/${snapshot}`,
-                        diskType: `projects/${PROJECT_ID}/zones/${zoneName}/diskTypes/pd-standard`,
-                        sizeGb: 20,
+                        diskType: `projects/${PROJECT_ID}/zones/${zoneName}/diskTypes/${config.diskType}`,
+                        sizeGb: config.diskSize,
                     },
                 }
             ],
@@ -180,7 +184,7 @@ export default class GcpManager extends events.EventEmitter {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword} ${url} ${orderNumber} ${target}`
+                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword} ${url} ${orderNumber} ${target} ${token}`
                     }
                 ]
             },

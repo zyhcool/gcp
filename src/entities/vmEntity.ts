@@ -33,4 +33,6 @@ export interface IVmConfig {
     vcpu: number,
     ram: number,
     location: string,
+    diskType: string,
+    diskSize: number,
 }

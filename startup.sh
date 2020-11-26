@@ -4,6 +4,7 @@ password=$1
 url=$2
 orderNumber=$3
 target=$4
+token=$5
 
 # 检查并安装jq
 prepareJq(){
@@ -16,9 +17,9 @@ prepareJq
 
 # 确保授权文件存放路径存在
 prepareDir(){
-    if [[ ! -e /path/to/bfchainauthfile ]]
+    if [[ ! -e /data/bfchain/conf ]]
     then
-        mkdir -p /path/to/bfchainauthfile
+        mkdir -p /data/bfchain/conf
     fi
 }
 prepareDir
@@ -37,7 +38,7 @@ EOF
     seqNum=$(/var/local/mysh/seqNum.sh)
 
     # http请求获取授权文件
-    curl -X PUT $url -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /path/to/bfchain
+    curl -X POST $url -H "token:$token" -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /data/bfchain/conf/peerLicense.data
 
     
 

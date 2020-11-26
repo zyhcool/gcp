@@ -64,13 +64,15 @@ export default class VmController {
         @QueryParam("vcpu") vcpu: number,
         @QueryParam("ram") ram: number,
         @QueryParam("location") location: string,
+        @QueryParam("diskType") diskType: string,
+        @QueryParam("diskSize") diskSize: number,
 
     ) {
 
         orderId = orderId || getUUid()
         await orderRepository.create({ orderId, left: 0, status: OrderStatus.deploying })
         const time = 1
-        const gcp = new Gcp(orderId, time, num, { machineType, vcpu, ram, location }, 'fakeuser')
+        const gcp = new Gcp(orderId, time, num, { machineType, vcpu, ram, location, diskType, diskSize }, 'fakeuser')
         gcp.start();
         gcp.on('complete', async () => {
             console.log('complete !!')
