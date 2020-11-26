@@ -75,7 +75,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
     1. 安装 gcloud cli 工具
     2. 验证登录：gcloud auth login
     3. 切换gcloud作用的项目：gcloud config set project [PROJECT-ID]（查看当前工作项目：gcloud config get-value [PROJECT-ID]）
-    4. 
+    4. 设置环境变量GOOGLE_APPLICATION_CREDENTIALS=/path/to/[ServiceAccountSecretFile.json]，客户端（nodejs版sdk）可以读取这个文件进行鉴权，取得某个项目的服务账号的权限来调用谷歌云接口
 
 
 

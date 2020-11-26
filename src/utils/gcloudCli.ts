@@ -75,6 +75,11 @@ export class GcloudCli {
         return obj
     }
 
+    public static async releaseAddress(addressName: string, region: string) {
+        let res = await this.gcloudcli(['compute', 'addresses', 'delete', `--region=${region}`, '-q', addressName])
+        return res
+    }
+
     /**
      * @description 调整实例磁盘大小
      * @param {} 

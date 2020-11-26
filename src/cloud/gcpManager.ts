@@ -176,7 +176,7 @@ export default class GcpManager extends events.EventEmitter {
                         diskName,
                         sourceSnapshot: `projects/${PROJECT_ID}/global/snapshots/${snapshot}`,
                         diskType: `projects/${PROJECT_ID}/zones/${zoneName}/diskTypes/${config.diskType}`,
-                        sizeGb: config.diskSize,
+                        diskSizeGb: config.diskSize,
                     },
                 }
             ],
@@ -376,22 +376,8 @@ export default class GcpManager extends events.EventEmitter {
 
         const vmMetadata = await operationPromisefy(operation, 'complete', true)
         if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
-            await this.releaseAddress(addressName, regionName)
+            await GcloudCli.releaseAddress(addressName, regionName)
         }
-    }
-
-    private static releaseAddress(addressName: string, region: string) {
-        return new Promise((resolve, reject) => {
-            const child = spawn('gcloud', ['compute', 'addresses', 'delete', `--region=${region}`, '-q', addressName])
-            child.on('end', () => {
-                resolve(true)
-            })
-
-            child.on('error', (err) => {
-                reject(err)
-            })
-
-        })
     }
 
 
