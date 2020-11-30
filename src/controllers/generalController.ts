@@ -6,6 +6,8 @@ import {
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
+import { orderRepository } from "../entities/orderEntity";
+import { instanceRepository } from "../entities/instanceEntity";
 
 
 @Controller("/general")
@@ -43,5 +45,24 @@ export default class GeneralController {
         }
         compute.create()
     }
+
+    @Get('/orders')
+    async orders() {
+        return await orderRepository.find({}).lean();
+    }
+
+    @Get('/instances')
+    async instances() {
+        return await instanceRepository.find({}).lean()
+    }
+
+
+    @Get('/delAll')
+    async delAll() {
+        await instanceRepository.deleteMany({})
+        await orderRepository.deleteMany({})
+    }
+
+
 
 }
