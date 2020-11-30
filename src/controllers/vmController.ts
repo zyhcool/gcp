@@ -70,29 +70,18 @@ export default class VmController {
     ) {
 
         orderId = orderId || getUUid()
-        await orderRepository.create({ orderId, left: 0, status: OrderStatus.deploying })
+        await orderRepository.create({
+            orderId, left: 0, status: OrderStatus.deploying, config: {
+                machineType,
+                ram,
+                vcpu,
+                location,
+                diskType,
+                diskSize,
+            }
+        })
         const time = 1
-        const gcp = new Gcp(orderId, time, num, { machineType, vcpu, ram, location, diskType, diskSize }, 'fakeuser')
-        gcp.start();
-        gcp.on('complete', async () => {
-            console.log('complete !!')
-            await orderRepository.updateOne({ orderId }, { $set: { left: 0 } })
-            // 订单实例全部成功，交付实例
-            await instanceRepository.updateMany({ iporderId: orderId }, { $set: { status: instanceStatus.delivery } })
-        })
-        gcp.on('success', async (data) => {
-            console.log('success !!')
-            await instanceRepository.create(Object.assign({}, data, {
-                iporderId: orderId,
-                status: instanceStatus.deploy,
-            }))
-        })
-        gcp.on('timeout', async (left: number) => {
-            console.log('timeout !!', orderId)
-            await orderRepository.updateOne({ orderId }, { $set: { left, status: OrderStatus.unvalid } })
-        })
-
-
+        await this.orderService.deployOrder(orderId, time, num, { machineType, vcpu, ram, location, diskType, diskSize }, 'fakeuser')
         return true;
     }
 

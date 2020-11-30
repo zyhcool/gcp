@@ -6,7 +6,6 @@ import operationPromisefy from "../utils/promisefy";
 import generatePasswd from 'generate-password'
 import CloudOrderCache from "../utils/cloudOrderCache";
 import { logger } from "../logger";
-import { spawn } from 'child_process'
 import NetworkTest from "../utils/networkTest";
 import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";

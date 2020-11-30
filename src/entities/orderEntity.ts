@@ -1,10 +1,12 @@
 
 import mongoose from "mongoose"
+import { IVmConfig } from "./vmEntity";
 
 export class Order {
     orderId: string;
     status: OrderStatus;
     left: number;
+    config: IVmConfig;
 
 }
 
@@ -14,6 +16,7 @@ const orderSchema = new mongoose.Schema({
     orderId: String,
     status: Number,
     left: Number,
+    config: Object,
 
 }, { timestamps: true })
 
