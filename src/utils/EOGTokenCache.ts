@@ -9,14 +9,16 @@ export default class EOGTokenCache {
     private static expire = 2 * 60 * 60;
 
     static async getToken() {
-        let token = Cache.getValue(this.prefix)
-        if (!token) {
+        let cache = Cache.get(this.prefix)
+        let token = cache && cache.value
+        if (!token || cache.expireTime.getTime() < Date.now() + 2.5 * 60 * 1000) {
             token = await this.loginEOG()
+            this.setToken(token)
         }
         return token
     }
 
-    static loginEOG() {
+    private static loginEOG() {
         const EOG = Config.EOG;
         return new Promise((resolve, reject) => {
             axios.request({

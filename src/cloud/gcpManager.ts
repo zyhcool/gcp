@@ -11,6 +11,7 @@ import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
 import { GcloudCli } from "../utils/gcloudCli";
+import EOGTokenCache from "../utils/EOGTokenCache";
 
 
 enum GcpEvent {
@@ -28,7 +29,6 @@ export default class GcpManager extends events.EventEmitter {
     private expireTime: number = 3 * 60 * 1000; // 5分钟
     private user: string; // 
     private snapshot: string; // 最新快照
-    private goetoken: string; // 上帝之眼登录token
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         super()
         this.init(orderId, time, num, config, user)
@@ -75,7 +75,6 @@ export default class GcpManager extends events.EventEmitter {
             await this.finish()
             return
         }
-        console.log(orderCache)
 
         // 已完成全部部署
         if (this.left <= 0 && orderCache.value.completed === orderCache.value.num) {
@@ -92,8 +91,8 @@ export default class GcpManager extends events.EventEmitter {
         }
 
         try {
-            if (this.left === 2) throw new Error('ren wei error')
-            let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user, this.goetoken)
+            // if (this.left === 2) throw new Error('ren wei error')
+            let res = await this.createVm(this.orderId, this.time, this.config, this.left, this.user)
             // 部署成功，缓存更新
             if (res) {
                 this.emit(GcpEvent.success, res)
@@ -139,7 +138,6 @@ export default class GcpManager extends events.EventEmitter {
         config: IVmConfig,
         index: number,
         user: string,
-        token: string,
     ) {
 
         let { machineType, location, vcpu, ram } = config;
@@ -163,6 +161,7 @@ export default class GcpManager extends events.EventEmitter {
         // EOG需要的
         const orderNumber = orderId
         const target = user
+        const token = EOGTokenCache.getToken()
 
         const vmconfig = {
             disks: [
