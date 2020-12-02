@@ -303,7 +303,7 @@ export default class GcpManager extends events.EventEmitter {
         // 重新创建snapshot
         const zone = compute.zone(Config.SOURCE_DISK_ZONE);
         const disk = zone.disk(Config.SOURCE_DISK);
-        const res = await disk.createSnapshot()
+        const res = await disk.createSnapshot(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${new Date().toLocaleDateString()}`)
         console.log(res)
         res[1].on("complete", (metadata) => {
             if (metadata.status === 'DONE' && metadata.progress === 100) {
@@ -422,14 +422,14 @@ export default class GcpManager extends events.EventEmitter {
 
     private static async deleteLatestSnapshot() {
         const compute = new Compute()
-        let [snapshots] = await compute.getSnapshots({
-            maxResults: 1,
-            orderBy: "creationTimestamp asc",
-        })
+        let [snapshots] = await compute.getSnapshots()
+        if (!snapshots || snapshots.length < 2) {
+            return
+        }
 
         const [snapshot] = snapshots
         if (snapshot) {
-            const [ssoperation] = await snapshot.delete()
+            await snapshot.delete()
         }
     }
 
