@@ -8,6 +8,9 @@ interface IConfig {
     PROJECT_ID: string;
     SKU_KEY: string;
     NETWORK_TAGS: Array<string>;
+    SNAPSHOT: string;
+    SOURCE_DISK: string;
+    SOURCE_DISK_ZONE: string;
     EOG: {
         baseUrl: string,
         loginPath: string,
@@ -31,6 +34,9 @@ const Config: IConfig = {
     PROJECT_ID: "gcp-test-293701",
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
+    SNAPSHOT: "snapshot-1",
+    SOURCE_DISK: "gcp-test",
+    SOURCE_DISK_ZONE: "us-central1-a",
     EOG: {
         baseUrl: 'http://34.96.179.189:880',
         loginPath: '/login',

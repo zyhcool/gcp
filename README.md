@@ -45,12 +45,14 @@
 GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 
 ## 配置信息
-1. 项目id
-2. 防火墙规则名称（开放端口）
-3. API密钥
-4. 服务账号及密钥文件
-5. 序列号生成工具的文件路径
-6. 授权码文件的存放路径
+1. 项目id [gcp.projectId]
+2. 防火墙规则名称（开放端口）[gcp.networkTags]
+3. API密钥 [gcp.skuKey]
+4. 序列号生成工具的文件路径 [gcp.seqTool]
+5. 授权码文件的存放路径（/data/bfchain/conf）
+6. 启动脚本路径（startup.sh） [gcp.startupPath]
+
+1. 服务账号密钥文件路径（设置GOOGLE_APPLICATION_CREDENTIALS环境变量）
 
 
 
@@ -81,6 +83,9 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 
 
 
-
+## bfchain关停程序
+1. 创建用户组和用户：useradd -m bfchain
+2. 设置免密登录：进入/home/bfchain目录，创建.ssh/authorized_keys：`mkdir .ssh;touch authorized_keys`，追加公钥
+3. 修改执行文件的权限：chmod 700 ./bfchain
 
 

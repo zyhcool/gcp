@@ -5,6 +5,7 @@ url=$2
 orderNumber=$3
 target=$4
 token=$5
+seqTool=$6
 
 # 检查并安装jq
 prepareJq(){
@@ -35,10 +36,10 @@ $password
 EOF
 
 # 获取序列号
-seqNum=$(/var/local/mysh/seqNum.sh)
+seqNum=$(${seqTool})
 
 # http请求获取授权文件
-curl -X POST $url -H "token:$token" -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /data/bfchain/conf/peerLicense.data
+curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /data/bfchain/conf/peerLicense.data
 
 
 

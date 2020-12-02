@@ -290,6 +290,29 @@ export default class GcpManager extends events.EventEmitter {
         return pwd;
     }
 
+    /**
+     * @description 更新snapshot（删除原有snapshot，新建snapshot）
+     * @param {} 
+     * @return {} 
+     */
+    public static async updateSnapshot() {
+        const compute = new Compute();
+        const now = Date.now()
+        // 删除旧的snapshot
+        this.deleteLatestSnapshot()
+        // 重新创建snapshot
+        const zone = compute.zone(Config.SOURCE_DISK_ZONE);
+        const disk = zone.disk(Config.SOURCE_DISK);
+        const res = await disk.createSnapshot()
+        console.log(res)
+        res[1].on("complete", (metadata) => {
+            if (metadata.status === 'DONE' && metadata.progress === 100) {
+                console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000) // 测试数据：167.164 s
+            }
+        })
+        return true
+
+    }
 
     /**
      * @description 检查配额是否够用
@@ -394,6 +417,19 @@ export default class GcpManager extends events.EventEmitter {
         }
         else {
             throw new Error('snapshot is not ready')
+        }
+    }
+
+    private static async deleteLatestSnapshot() {
+        const compute = new Compute()
+        let [snapshots] = await compute.getSnapshots({
+            maxResults: 1,
+            orderBy: "creationTimestamp asc",
+        })
+
+        const [snapshot] = snapshots
+        if (snapshot) {
+            const [ssoperation] = await snapshot.delete()
         }
     }
 

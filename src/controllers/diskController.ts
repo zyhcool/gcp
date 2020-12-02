@@ -10,6 +10,7 @@ import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
 import { Worker } from "worker_threads";
 import { resolve } from "path";
+import GcpManager from "../cloud/gcpManager";
 
 
 @Controller("/disk")
@@ -88,13 +89,7 @@ export default class DiskController {
 
     @Get('/updateSnapshot')
     async updss() {
-        const worker = new Worker(resolve(process.cwd(), './dist/workers/snapshotUpdate.js'))
-        worker.on('message', (data) => {
-            if (data.event === 'done') {
-                console.log('workjs: ', data.result)
-            }
-        })
-        worker.postMessage({ cmd: 'start' })
+        GcpManager.updateSnapshot()
     }
 
     @Get('/latestSnapshot')
