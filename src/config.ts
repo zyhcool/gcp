@@ -35,7 +35,7 @@ const Config: IConfig = {
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
     SNAPSHOT: "snapshot-1",
-    SOURCE_DISK: "gcp-test",
+    SOURCE_DISK: "gcp-test1",
     SOURCE_DISK_ZONE: "us-central1-a",
     EOG: {
         baseUrl: 'http://34.96.179.189:880',
