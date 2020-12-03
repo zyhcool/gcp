@@ -6,6 +6,7 @@ interface IConfig {
     databaseUrl: string;
     entities: string[];
     PROJECT_ID: string;
+    SERVICE_ACCOUNT: string;
     SKU_KEY: string;
     NETWORK_TAGS: Array<string>;
     SNAPSHOT: string;
@@ -32,6 +33,7 @@ const Config: IConfig = {
     databaseUrl: isDevMode ? "mongodb://localhost:8625/gcp" : "mongodb://database/gcp",
     entities: isDevMode ? ["src/entities/*.ts"] : ["dist/entities/*.js"],
     PROJECT_ID: "gcp-test-293701",
+    SERVICE_ACCOUNT: "gcp-test@gcp-test-293701.iam.gserviceaccount.com",
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
     SNAPSHOT: "snapshot-1",

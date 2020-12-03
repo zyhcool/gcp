@@ -7,6 +7,7 @@ import {
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
+import GcloudRestApikey, { GcloudRestService } from "../utils/gcloudRest";
 
 
 @Controller("/address")
@@ -58,6 +59,22 @@ export default class AddressController {
 
         const region = compute.region("us-central1");
         const address = region.address("teststaticip");
+    }
+
+    @Get("/releaseAddress1")
+    async release(
+        @QueryParam('address') address: string,
+        @QueryParam('region') region: string,
+    ) {
+        GcloudRestApikey.deleteAddress({ region, address })
+    }
+
+    @Get("/releaseAddress2")
+    async release2(
+        @QueryParam('address') address: string,
+        @QueryParam('region') region: string,
+    ) {
+        GcloudRestService.deleteAddress({ address, region })
     }
 
 

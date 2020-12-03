@@ -1,10 +1,12 @@
 import { spawn } from "child_process";
+import { Config } from "../config";
 
 
 
 export class GcloudCli {
     private static gcloudcli(args: string[], command: string = 'gcloud',): Promise<Buffer> {
         return new Promise((resolve, reject) => {
+            args.push(`--project=${Config.PROJECT_ID}`, `--account=${Config.SERVICE_ACCOUNT}`, '-q')
             const subProcess = spawn(command, args)
             let data
 
@@ -76,7 +78,7 @@ export class GcloudCli {
     }
 
     public static async releaseAddress(addressName: string, region: string) {
-        let res = await this.gcloudcli(['compute', 'addresses', 'delete', `--region=${region}`, '-q', addressName])
+        let res = await this.gcloudcli(['compute', 'addresses', 'delete', `--region=${region}`, addressName])
         return res
     }
 
@@ -86,8 +88,7 @@ export class GcloudCli {
      * @return {} gcloud compute disks resize gcp-test --size 30 --zone us-central1-a -q
      */
     public static async resizeDisk(zone: string, diskName: string, size: number) {
-        let res: any = await this.gcloudcli(['compute', 'disks', 'resize', diskName, '--zone', zone, '--size', size.toString(), '-q'])
-
+        await this.gcloudcli(['compute', 'disks', 'resize', diskName, `--zone=${zone}`, `--size=${size.toString()}`])
     }
 
 

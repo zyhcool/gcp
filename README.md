@@ -76,9 +76,18 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 服务器开启gcloud命令行工具：
     1. 安装 gcloud cli 工具
     2. 验证登录：gcloud auth login
-    3. 切换gcloud作用的项目：gcloud config set project [PROJECT-ID]（查看当前工作项目：gcloud config get-value [PROJECT-ID]）
+    3. 切换gcloud作用的项目：gcloud config set project [PROJECT-ID]（查看当前工作项目：gcloud config get-value project）
     4. 设置环境变量GOOGLE_APPLICATION_CREDENTIALS=/path/to/[ServiceAccountSecretFile.json]，客户端（nodejs版sdk）可以读取这个文件进行鉴权，取得某个项目的服务账号的权限来调用谷歌云接口
 
+也可以使用服务账号登录：
+    gcloud auth activate-service-account --key-file=/path/to/[ServiceAccountSecretFile.json] [SERVICE_ACCOUNT]
+这样可以确保使用gcloud命令行时，不会对其他项目的资源误操作
+
+查看登录账号：gcloud auth list
+切换活动账号：gcloud config set account [ACCOUNT]
+使用服务账号授权：gcloud auth activate-service-account [ACCOUNT] --key-file=[KEY_FILE]
+> [使用服务账号授权](https://cloud.google.com/sdk/docs/authorizing#authorizing_with_a_service_account)
+> [activate-service-account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account)
 
 
 
