@@ -5,7 +5,7 @@ import { Config } from '../config';
 export default class GcloudRest {
     private static compute = google.compute('v1')
     private static auth = new google.auth.GoogleAuth({
-        keyFile: '/var/projects/gcp/auth/auth.json',
+        keyFile: Config.SECRET_FILE,
         scopes: [
             'https://www.googleapis.com/auth/cloud-platform',
             'https://www.googleapis.com/auth/compute',
@@ -53,7 +53,6 @@ export default class GcloudRest {
      */
     static async getQuotas(region: string) {
         const authClient = await this.auth.getClient()
-        console.log(authClient)
         const res = await this.compute.regions.get({
             auth: authClient,
             project: Config.PROJECT_ID,

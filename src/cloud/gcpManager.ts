@@ -22,6 +22,8 @@ enum GcpEvent {
 }
 
 export default class GcpManager extends events.EventEmitter {
+    private compute = new Compute({ keyFile: Config.SECRET_FILE })
+
     private orderId: string;
     private time: number; // 月
     private left: number; // 实例个数
@@ -146,10 +148,10 @@ export default class GcpManager extends events.EventEmitter {
         const snapshot = this.snapshot
 
         const compute = new Compute();
-        const region = compute.region(location);
+        const region = this.compute.region(location);
 
         const zoneName = await this.getZone(location)
-        const zone = compute.zone(zoneName)
+        const zone = this.compute.zone(zoneName)
 
         const machineType_str = this.getMachineType(machineType, vcpu, ram)
 
@@ -243,13 +245,13 @@ export default class GcpManager extends events.EventEmitter {
     private async getZone(regionName: string): Promise<string> {
         const compute = new Compute();
 
-        const regionRes = await compute.getRegions({ autoPaginate: false })
+        const regionRes = await this.compute.getRegions({ autoPaginate: false })
         const regions = regionRes[0].map(region => region.id)
         if (!regions.includes(regionName)) {
             throw new Error('location is invalid')
         }
 
-        const zoneRes = await compute.getZones({ autoPaginate: false })
+        const zoneRes = await this.compute.getZones({ autoPaginate: false })
         const zones = (zoneRes[0] as Array<any>).filter(zone => {
             const reg = new RegExp(regionName)
             return reg.test(zone.id)
@@ -297,10 +299,10 @@ export default class GcpManager extends events.EventEmitter {
      * @return {} 
      */
     public static async updateSnapshot() {
-        const compute = new Compute();
+        const compute = new Compute({ keyFile: Config.SECRET_FILE });
         const now = Date.now()
         // 删除旧的snapshot
-        this.deleteLatestSnapshot()
+        await this.deleteLatestSnapshot()
         // 重新创建snapshot
         const zone = compute.zone(Config.SOURCE_DISK_ZONE);
         const disk = zone.disk(Config.SOURCE_DISK);
@@ -335,10 +337,10 @@ export default class GcpManager extends events.EventEmitter {
             num > quotas.INSTANCES.left
         ) {
             throw new Error(`该订单所需资源超出该地区配额，无法部署。剩余配额：\n
-            vcpu：${quotas.CPUS}\n
-            硬盘：${quotas.DISKS_TOTAL_GB} (GB)\n
-            ip：${quotas.IN_USE_ADDRESSES}\n
-            实例：${quotas.INSTANCES}\n
+            vcpu：${quotas.CPUS.left}\n
+            硬盘：${quotas.DISKS_TOTAL_GB.left} (GB)\n
+            ip：${quotas.IN_USE_ADDRESSES.left}\n
+            实例：${quotas.INSTANCES.left}\n
             `)
         }
     }
@@ -391,7 +393,7 @@ export default class GcpManager extends events.EventEmitter {
     private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
         const { addressName, vmName, zone: zoneName } = instance;
         const regionName = zoneName.substring(0, zoneName.length - 2)
-        const compute = new Compute();
+        const compute = new Compute({ keyFile: Config.SECRET_FILE });
         const zone = compute.zone(zoneName);
         const vm = zone.vm(vmName);
         const [operation] = await vm.delete()
@@ -406,7 +408,7 @@ export default class GcpManager extends events.EventEmitter {
 
     private async getLatestSnapshot(): Promise<string> {
         const compute = new Compute()
-        let [snapshots] = await compute.getSnapshots({
+        let [snapshots] = await this.compute.getSnapshots({
             maxResults: 2,
             orderBy: "creationTimestamp desc",
         })
@@ -423,7 +425,7 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     private static async deleteLatestSnapshot() {
-        const compute = new Compute()
+        const compute = new Compute({ keyFile: Config.SECRET_FILE })
         let [snapshots] = await compute.getSnapshots({
             orderBy: "creationTimestamp desc",
         })
@@ -437,20 +439,25 @@ export default class GcpManager extends events.EventEmitter {
         }
     }
 
-    async getQuotas(region: string, keys: Array<string>) {
+    private async getQuotas(region: string, keys: Array<string>) {
         let quotas = await GcloudRest.getQuotas(region)
         const filtered = quotas
             .filter((quota) => {
                 return keys.includes(quota.metric)
             })
-        let data: { [key: string]: compute_v1.Schema$Quota & { left: number, usePercent: number } } = {}
+        let data: { [key: string]: compute_v1.Schema$Quota & { left: number, percent: number } } = {}
         filtered.forEach(quota => {
             data[quota.metric] = Object.assign({}, quota, {
                 left: quota.limit - quota.usage,
-                usePercent: Math.ceil((quota.usage / quota.limit) * 100)
+                percent: Math.ceil((quota.usage / quota.limit) * 100)
             })
         })
         return data
+    }
+
+
+    async resizeDisk(zone: string, disk: string, size: number) {
+        await GcloudRest.resizeDisk({ zone, disk, size })
     }
 
 
