@@ -10,8 +10,9 @@ import NetworkTest from "../utils/networkTest";
 import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
-import { GcloudCli } from "../utils/gcloudCli";
 import EOGTokenCache from "../utils/EOGTokenCache";
+import GcloudRest from "../utils/gcloudRest";
+import { compute_v1 } from "googleapis";
 
 
 enum GcpEvent {
@@ -320,7 +321,7 @@ export default class GcpManager extends events.EventEmitter {
      * @return {} 
      */
     public async validateQuotas(config: IVmConfig, num: number) {
-        const quotas = await GcloudCli.getQuotas(config.location, [
+        const quotas = await this.getQuotas(config.location, [
             'CPUS', // cpu
             'DISKS_TOTAL_GB', // 持久化硬盘
             'IN_USE_ADDRESSES', // 使用中的ip地址（包括临时和预留）
@@ -328,10 +329,10 @@ export default class GcpManager extends events.EventEmitter {
         ])
         console.log(quotas)
         if (
-            config.vcpu * num > quotas.CPUS ||
-            20 * num > quotas.DISKS_TOTAL_GB ||
-            1 * num > quotas.IN_USE_ADDRESSES ||
-            num > quotas.INSTANCES
+            config.vcpu * num > quotas.CPUS.left ||
+            20 * num > quotas.DISKS_TOTAL_GB.left ||
+            1 * num > quotas.IN_USE_ADDRESSES.left ||
+            num > quotas.INSTANCES.left
         ) {
             throw new Error(`该订单所需资源超出该地区配额，无法部署。剩余配额：\n
             vcpu：${quotas.CPUS}\n
@@ -397,7 +398,8 @@ export default class GcpManager extends events.EventEmitter {
 
         const vmMetadata = await operationPromisefy(operation, 'complete', true)
         if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
-            await GcloudCli.releaseAddress(addressName, regionName)
+            // await GcloudCli.releaseAddress(addressName, regionName)
+            await GcloudRest.releaseAddress({ address: addressName, region: regionName })
         }
     }
 
@@ -433,6 +435,22 @@ export default class GcpManager extends events.EventEmitter {
         if (snapshot) {
             await snapshot.delete()
         }
+    }
+
+    async getQuotas(region: string, keys: Array<string>) {
+        let quotas = await GcloudRest.getQuotas(region)
+        const filtered = quotas
+            .filter((quota) => {
+                return keys.includes(quota.metric)
+            })
+        let data: { [key: string]: compute_v1.Schema$Quota & { left: number, usePercent: number } } = {}
+        filtered.forEach(quota => {
+            data[quota.metric] = Object.assign({}, quota, {
+                left: quota.limit - quota.usage,
+                usePercent: Math.ceil((quota.usage / quota.limit) * 100)
+            })
+        })
+        return data
     }
 
 

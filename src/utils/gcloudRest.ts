@@ -2,29 +2,22 @@ import { google } from 'googleapis'
 import { Config } from '../config';
 
 
-export default class GcloudRestApikey {
-    private static compute = google.compute({
-        version: 'v1',
-        auth: 'AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s',
-    });
-    public static async deleteAddress(req: { region: string, address: string }) {
-        const res = await this.compute.addresses.delete({
-            project: Config.PROJECT_ID,
-            region: req.region,
-            address: req.address
-        })
-        console.log('释放地址1：', res)
-    }
-}
-
-export class GcloudRestService {
+export default class GcloudRest {
     private static compute = google.compute('v1')
     private static auth = new google.auth.GoogleAuth({
         keyFile: '/var/projects/gcp/auth/auth.json',
-        scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+        scopes: [
+            'https://www.googleapis.com/auth/cloud-platform',
+            'https://www.googleapis.com/auth/compute',
+        ],
     });
 
-    public static async deleteAddress(req: { region: string, address: string }) {
+    /**
+     * @description 释放静态ip资源
+     * @param {string} address 预留地址名称
+     * @return {} 
+     */
+    public static async releaseAddress(req: { region: string, address: string }) {
         const authClient = await this.auth.getClient()
 
         const res = await this.compute.addresses.delete({
@@ -33,6 +26,47 @@ export class GcloudRestService {
             region: req.region,
             address: req.address
         })
-        console.log('释放地址2：', res)
     }
+
+    /**
+     * @description 扩大硬盘容量
+     * @param {number} size 扩大到的数值，单位GB
+     * @return {} 
+     */
+    static async resizeDisk(req: { zone: string, disk: string, size: number }) {
+        const authClient = await this.auth.getClient()
+        const res = await this.compute.disks.resize({
+            auth: authClient,
+            project: Config.PROJECT_ID,
+            zone: req.zone,
+            disk: req.disk,
+            requestBody: {
+                sizeGb: `${req.size}`,
+            }
+        })
+    }
+
+    /**
+     * @description 地区配额信息
+     * @param {} 
+     * @return {} 
+     */
+    static async getQuotas(region: string) {
+        const authClient = await this.auth.getClient()
+        console.log(authClient)
+        const res = await this.compute.regions.get({
+            auth: authClient,
+            project: Config.PROJECT_ID,
+            region,
+        })
+        console.log(res)
+        const quotas = res && res.data && res.data.quotas
+        if (!quotas || quotas.length <= 0) {
+            throw new Error('quotas is null')
+        }
+        return quotas
+    }
+
+
+
 }
