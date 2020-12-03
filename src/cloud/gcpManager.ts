@@ -22,7 +22,20 @@ enum GcpEvent {
 }
 
 export default class GcpManager extends events.EventEmitter {
-    private compute = new Compute({ keyFile: Config.SECRET_FILE })
+    private compute = new Compute({
+        keyFile: Config.SECRET_FILE,
+        scopes: [
+            'https://www.googleapis.com/auth/cloud-platform',
+            'https://www.googleapis.com/auth/compute',
+        ]
+    })
+    private static compute = new Compute({
+        keyFile: Config.SECRET_FILE,
+        scopes: [
+            'https://www.googleapis.com/auth/cloud-platform',
+            'https://www.googleapis.com/auth/compute',
+        ]
+    })
 
     private orderId: string;
     private time: number; // 月
@@ -147,7 +160,6 @@ export default class GcpManager extends events.EventEmitter {
         const PROJECT_ID = Config.PROJECT_ID;
         const snapshot = this.snapshot
 
-        const compute = new Compute();
         const region = this.compute.region(location);
 
         const zoneName = await this.getZone(location)
@@ -243,8 +255,6 @@ export default class GcpManager extends events.EventEmitter {
      * @return {} 
      */
     private async getZone(regionName: string): Promise<string> {
-        const compute = new Compute();
-
         const regionRes = await this.compute.getRegions({ autoPaginate: false })
         const regions = regionRes[0].map(region => region.id)
         if (!regions.includes(regionName)) {
@@ -299,12 +309,11 @@ export default class GcpManager extends events.EventEmitter {
      * @return {} 
      */
     public static async updateSnapshot() {
-        const compute = new Compute({ keyFile: Config.SECRET_FILE });
         const now = Date.now()
         // 删除旧的snapshot
         await this.deleteLatestSnapshot()
         // 重新创建snapshot
-        const zone = compute.zone(Config.SOURCE_DISK_ZONE);
+        const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
         const disk = zone.disk(Config.SOURCE_DISK);
         const res = await disk.createSnapshot(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
         console.log(res)
@@ -393,8 +402,7 @@ export default class GcpManager extends events.EventEmitter {
     private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
         const { addressName, vmName, zone: zoneName } = instance;
         const regionName = zoneName.substring(0, zoneName.length - 2)
-        const compute = new Compute({ keyFile: Config.SECRET_FILE });
-        const zone = compute.zone(zoneName);
+        const zone = this.compute.zone(zoneName);
         const vm = zone.vm(vmName);
         const [operation] = await vm.delete()
 
@@ -407,7 +415,6 @@ export default class GcpManager extends events.EventEmitter {
 
 
     private async getLatestSnapshot(): Promise<string> {
-        const compute = new Compute()
         let [snapshots] = await this.compute.getSnapshots({
             maxResults: 2,
             orderBy: "creationTimestamp desc",
@@ -425,8 +432,7 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     private static async deleteLatestSnapshot() {
-        const compute = new Compute({ keyFile: Config.SECRET_FILE })
-        let [snapshots] = await compute.getSnapshots({
+        let [snapshots] = await this.compute.getSnapshots({
             orderBy: "creationTimestamp desc",
         })
         if (!snapshots || snapshots.length < 2) {
