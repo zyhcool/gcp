@@ -58,7 +58,6 @@ export default class GcloudRest {
             project: Config.PROJECT_ID,
             region,
         })
-        console.log(res)
         const quotas = res && res.data && res.data.quotas
         if (!quotas || quotas.length <= 0) {
             throw new Error('quotas is null')

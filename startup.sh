@@ -25,12 +25,12 @@ prepareDir(){
 }
 prepareDir
 
-sudo su root
-# 修改root用户密码
-passwd root << EOF
-$password
-$password
-EOF
+# sudo su root
+# # 修改root用户密码
+# passwd root << EOF
+# $password
+# $password
+# EOF
 
 # 获取序列号
 seqNum=$(${seqTool})

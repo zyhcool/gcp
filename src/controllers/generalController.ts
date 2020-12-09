@@ -9,6 +9,8 @@ import Compute from '@google-cloud/compute'
 import { orderRepository } from "../entities/orderEntity";
 import { instanceRepository } from "../entities/instanceEntity";
 import EOGTokenCache from "../utils/EOGTokenCache";
+import GcloudRest from "../utils/gcloudRest";
+import GcpManager from "../cloud/gcpManager";
 
 
 @Controller("/general")
@@ -67,7 +69,16 @@ export default class GeneralController {
 
     @Get('/test')
     async test() {
-        EOGTokenCache.getToken()
+
+        GcloudRest.releaseAddress({ region: 'europe-west4', address: 'staticip-40fb151375aa4b60be48eed1d623d306-1' }).catch(e => console.log(e))
+
+        GcloudRest.resizeDisk({ zone: 'europe-west4-a', disk: 'disk-d54a2ce421fb463fb0c9da6e8ae8d438-1', size: 22 }).catch(e => console.log(e))
+
+        GcpManager.deleteVM({
+            addressName: 'staticip-d54a2ce421fb463fb0c9da6e8ae8d438-1',
+            vmName: 'vm-d54a2ce421fb463fb0c9da6e8ae8d438-1',
+            zone: 'europe-west4-a',
+        }).catch(e => console.log(e))
     }
 
 }

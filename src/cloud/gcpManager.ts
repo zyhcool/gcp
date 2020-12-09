@@ -177,7 +177,8 @@ export default class GcpManager extends events.EventEmitter {
         // EOG需要的
         const orderNumber = orderId
         const target = user
-        const token = await EOGTokenCache.getToken()
+        // const token = await EOGTokenCache.getToken()
+        const token = 'faketoken'
 
         const vmconfig = {
             disks: [
@@ -399,7 +400,7 @@ export default class GcpManager extends events.EventEmitter {
 
     }
 
-    private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
+    public static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
         const { addressName, vmName, zone: zoneName } = instance;
         const regionName = zoneName.substring(0, zoneName.length - 2)
         const zone = this.compute.zone(zoneName);
