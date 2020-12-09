@@ -48,7 +48,7 @@ const Config: IConfig = {
         authMethod: 'post',
         email: '13105027620@163.com',
         password: '5c82bd64111990e96805554be1b25a16e656f86119fe622ac6213be0b0db07b4', // 哈希过的密码
-        tokenExpireTime: 24 * 60 * 60,
+        tokenExpireTime: 1 * 60 * 60,
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json'
 };

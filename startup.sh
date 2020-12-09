@@ -25,9 +25,6 @@ prepareDir(){
 }
 prepareDir
 
-# 根据某些条件判断bfchain是否已经授权成功并启动
-# if ! ps -ef | grep -w bcf | grep -v grep > /dev/null
-# then
 sudo su root
 # 修改root用户密码
 passwd root << EOF
@@ -44,5 +41,5 @@ curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=$
 
 
 # 重启BFChain
-echo "success" > /var/local/mysh/success
-# fi
+supervisorctl start bcf > /dev/null
+

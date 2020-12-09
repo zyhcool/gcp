@@ -42,7 +42,7 @@ export default class GcpManager extends events.EventEmitter {
     private left: number; // 实例个数
     private config: IVmConfig;
     private startTime: Date; // 开始时间
-    private expireTime: number = 3 * 60 * 1000; // 5分钟
+    private expireTime: number;
     private user: string; // 
     private snapshot: string; // 最新快照
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
@@ -57,6 +57,7 @@ export default class GcpManager extends events.EventEmitter {
         this.config = config;
         this.user = user;
         this.startTime = new Date();
+        this.expireTime = num * 3 * 60 * 1000;
     }
 
 
@@ -176,7 +177,7 @@ export default class GcpManager extends events.EventEmitter {
         // EOG需要的
         const orderNumber = orderId
         const target = user
-        const token = EOGTokenCache.getToken()
+        const token = await EOGTokenCache.getToken()
 
         const vmconfig = {
             disks: [
@@ -316,7 +317,6 @@ export default class GcpManager extends events.EventEmitter {
         const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
         const disk = zone.disk(Config.SOURCE_DISK);
         const res = await disk.createSnapshot(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
-        console.log(res)
         res[1].on("complete", (metadata) => {
             if (metadata.status === 'DONE' && metadata.progress === 100) {
                 console.log('更新snapshot用时：%s s', (Date.now() - now) / 1000) // 测试数据：167.164 s
@@ -447,17 +447,17 @@ export default class GcpManager extends events.EventEmitter {
 
     private async getQuotas(region: string, keys: Array<string>) {
         let quotas = await GcloudRest.getQuotas(region)
-        const filtered = quotas
+        let data: { [key: string]: compute_v1.Schema$Quota & { left: number, percent: number } } = {}
+        quotas
             .filter((quota) => {
                 return keys.includes(quota.metric)
             })
-        let data: { [key: string]: compute_v1.Schema$Quota & { left: number, percent: number } } = {}
-        filtered.forEach(quota => {
-            data[quota.metric] = Object.assign({}, quota, {
-                left: quota.limit - quota.usage,
-                percent: Math.ceil((quota.usage / quota.limit) * 100)
+            .forEach(quota => {
+                data[quota.metric] = Object.assign({}, quota, {
+                    left: quota.limit - quota.usage,
+                    percent: Math.ceil((quota.usage / quota.limit) * 100)
+                })
             })
-        })
         return data
     }
 

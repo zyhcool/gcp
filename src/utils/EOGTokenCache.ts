@@ -5,8 +5,8 @@ import { Cache } from "./cache";
 
 export default class EOGTokenCache {
     private static prefix: string = 'eogToken:'
-    // 2小时后过期
-    private static expire = 2 * 60 * 60;
+    // 1小时后过期
+    private static expire = 1 * 60 * 60;
 
     static async getToken() {
         let cache = Cache.get(this.prefix)
@@ -30,8 +30,8 @@ export default class EOGTokenCache {
                 }
             }).then((res) => {
                 const responseBody = res.data;
-                resolve(responseBody.token)
-                this.setToken(responseBody.token)
+                resolve(responseBody.data.token)
+                this.setToken(responseBody.data.token)
             }).catch((e) => {
                 reject(e)
             })

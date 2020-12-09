@@ -8,6 +8,7 @@ import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import { orderRepository } from "../entities/orderEntity";
 import { instanceRepository } from "../entities/instanceEntity";
+import EOGTokenCache from "../utils/EOGTokenCache";
 
 
 @Controller("/general")
@@ -64,5 +65,9 @@ export default class GeneralController {
     }
 
 
+    @Get('/test')
+    async test() {
+        EOGTokenCache.getToken()
+    }
 
 }
