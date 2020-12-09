@@ -103,13 +103,15 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 | --- | --- | --- |
 |compute.regions.list |获取地区列表|nodejs sdk(compute.getRegions)|
 |compute.zones.list |获取某地区的区域列表|nodejs sdk(compute.getZones)|
-| compute.disks.create、compute.instances.create|创建实例|nodejs sdk(zone.createVM)|
+| compute.disks.create、compute.instances.create、compute.subnetworks.use、compute.subnetworks.useExternalIp、compute.instances.setMetadata、compute.instances.setTags、compute.instances.setLabels、compute.snapshots.useReadOnly、compute.instances.get|创建实例|nodejs sdk(zone.createVM)|
 | compute.addresses.create、compute.addresses.createInternal、compute.instances.update|保留静态地址|nodejs sdk(address.create)|
 | compute.snapshots.list|获取快照列表|nodejs sdk(compute.getSnapshots)|
 |compute.snapshots.delete|删除快照|nodejs sdk(snapshot.delete)|
-| compute.disks.createSnapshot、compute.snapshots.create|创建快照|nodejs sdk(disk.createSnapshot)|
+| compute.disks.createSnapshot、compute.snapshots.create、compute.zoneOperations.get|创建快照|nodejs sdk(disk.createSnapshot)|
 | compute.regions.get|获取地区信息（配额）|api(compute.regions.get)|
 |compute.disks.resize |扩大硬盘容量|api(compute.disks.resize)|
 | compute.addresses.delete|释放静态地址|api(compute.addresses.delete)|
 |compute.instances.delete |删除实例|nodejs sdk(vm.delete)|
+
+
 

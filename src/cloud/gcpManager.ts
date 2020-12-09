@@ -177,8 +177,7 @@ export default class GcpManager extends events.EventEmitter {
         // EOG需要的
         const orderNumber = orderId
         const target = user
-        // const token = await EOGTokenCache.getToken()
-        const token = 'faketoken'
+        const token = await EOGTokenCache.getToken()
 
         const vmconfig = {
             disks: [
@@ -199,7 +198,7 @@ export default class GcpManager extends events.EventEmitter {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${rootPassword} ${url} ${orderNumber} ${target} ${token}`
+                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token}`
                     }
                 ]
             },
@@ -400,7 +399,7 @@ export default class GcpManager extends events.EventEmitter {
 
     }
 
-    public static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
+    private static async deleteVM(instance: { addressName: string, vmName: string, zone: string }) {
         const { addressName, vmName, zone: zoneName } = instance;
         const regionName = zoneName.substring(0, zoneName.length - 2)
         const zone = this.compute.zone(zoneName);
@@ -409,7 +408,6 @@ export default class GcpManager extends events.EventEmitter {
 
         const vmMetadata = await operationPromisefy(operation, 'complete', true)
         if (vmMetadata.status === "DONE" && vmMetadata.progress === 100) {
-            // await GcloudCli.releaseAddress(addressName, regionName)
             await GcloudRest.releaseAddress({ address: addressName, region: regionName })
         }
     }

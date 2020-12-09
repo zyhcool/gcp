@@ -30,8 +30,12 @@ export default class EOGTokenCache {
                 }
             }).then((res) => {
                 const responseBody = res.data;
-                resolve(responseBody.data.token)
-                this.setToken(responseBody.data.token)
+                if (responseBody.code === 0) {
+                    resolve(responseBody.data.token)
+                    this.setToken(responseBody.data.token)
+                } else {
+                    reject(responseBody.code)
+                }
             }).catch((e) => {
                 reject(e)
             })

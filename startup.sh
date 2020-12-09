@@ -1,11 +1,10 @@
 #! /bin/bash
 
-password=$1
-url=$2
-orderNumber=$3
-target=$4
-token=$5
-seqTool=$6
+url=$1
+orderNumber=$2
+target=$3
+token=$4
+seqTool=$5
 
 # 检查并安装jq
 prepareJq(){
@@ -24,13 +23,6 @@ prepareDir(){
     fi
 }
 prepareDir
-
-# sudo su root
-# # 修改root用户密码
-# passwd root << EOF
-# $password
-# $password
-# EOF
 
 # 获取序列号
 seqNum=$(${seqTool})
