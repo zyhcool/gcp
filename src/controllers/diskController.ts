@@ -103,4 +103,13 @@ export default class DiskController {
         console.log(snapshots)
     }
 
+    @Get('/resize')
+    async resize(
+        @QueryParam('zone') zone: string,
+        @QueryParam('diskname') diskname: string,
+        @QueryParam('size') size: number,
+    ) {
+        GcpManager.resizeDisk(zone, diskname, size)
+    }
+
 }

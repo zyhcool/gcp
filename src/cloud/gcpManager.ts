@@ -23,14 +23,16 @@ enum GcpEvent {
 
 export default class GcpManager extends events.EventEmitter {
     private compute = new Compute({
-        keyFile: Config.SECRET_FILE,
+        projectId: Config.PROJECT_ID,
+        keyFilename: Config.SECRET_FILE,
         scopes: [
             'https://www.googleapis.com/auth/cloud-platform',
             'https://www.googleapis.com/auth/compute',
         ]
     })
     private static compute = new Compute({
-        keyFile: Config.SECRET_FILE,
+        projectId: Config.PROJECT_ID,
+        keyFilename: Config.SECRET_FILE,
         scopes: [
             'https://www.googleapis.com/auth/cloud-platform',
             'https://www.googleapis.com/auth/compute',
@@ -461,7 +463,7 @@ export default class GcpManager extends events.EventEmitter {
     }
 
 
-    async resizeDisk(zone: string, disk: string, size: number) {
+    static async resizeDisk(zone: string, disk: string, size: number) {
         await GcloudRest.resizeDisk({ zone, disk, size })
     }
 
