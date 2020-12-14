@@ -5,7 +5,8 @@ import { Config } from '../config';
 export default class GcloudRest {
     private static compute = google.compute('v1')
     private static auth = new google.auth.GoogleAuth({
-        keyFile: Config.SECRET_FILE,
+        projectId: Config.PROJECT_ID,
+        keyFilename: Config.SECRET_FILE,
         scopes: [
             'https://www.googleapis.com/auth/cloud-platform',
             'https://www.googleapis.com/auth/compute',

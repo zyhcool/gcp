@@ -8,9 +8,8 @@ import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
 import Compute from '@google-cloud/compute'
 import { VmService } from "../services/vmService";
-import { Worker } from "worker_threads";
-import { resolve } from "path";
 import GcpManager from "../cloud/gcpManager";
+import GcloudRest from "../utils/gcloudRest";
 
 
 @Controller("/disk")
@@ -109,7 +108,7 @@ export default class DiskController {
         @QueryParam('diskname') diskname: string,
         @QueryParam('size') size: number,
     ) {
-        GcpManager.resizeDisk(zone, diskname, size)
+        await GcloudRest.resizeDisk({ zone, disk: diskname, size })
     }
 
 }
