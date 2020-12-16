@@ -47,6 +47,7 @@ export default class GcpManager extends events.EventEmitter {
     private expireTime: number;
     private user: string; // 
     private snapshot: string; // 最新快照
+    private image: string; // 最新镜像
     constructor(orderId: string, time: number, num: number, config: IVmConfig, user: string) {
         super()
         this.init(orderId, time, num, config, user)
@@ -70,9 +71,14 @@ export default class GcpManager extends events.EventEmitter {
         }
 
         // 获取最新快照
-        if (!this.snapshot) {
-            this.snapshot = await this.getLatestSnapshot()
-            console.log('最新快照：', this.snapshot)
+        // if (!this.snapshot) {
+        //     this.snapshot = await this.getLatestSnapshot()
+        //     console.log('最新快照：', this.snapshot)
+        // }
+        // 获取最新镜像
+        if (!this.image) {
+            this.image = await this.getLatestImage()
+            console.log('最新镜像：', this.image)
         }
 
         if (isNew) {
@@ -162,7 +168,7 @@ export default class GcpManager extends events.EventEmitter {
         let { machineType, location, vcpu, ram } = config;
         const PROJECT_ID = Config.PROJECT_ID;
         const snapshot = this.snapshot
-        const sourceImage = Config.SOURCE_IMAGE
+        const sourceImage = this.image
 
         const region = this.compute.region(location);
 
@@ -327,7 +333,28 @@ export default class GcpManager extends events.EventEmitter {
             }
         })
         return true
+    }
 
+    /**
+     * @description 更新snapshot（删除原有snapshot，新建snapshot）
+     * @param {} 
+     * @return {} 
+     */
+    public static async updateImage() {
+        const now = Date.now()
+        // 删除旧的image
+        await this.deleteLatestImage()
+        // 重新创建image
+        const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
+        const disk = zone.disk(Config.SOURCE_DISK);
+        const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
+        const res = await image.create(disk)
+        res[1].on("complete", (metadata) => {
+            if (metadata.status === 'DONE' && metadata.progress === 100) {
+                console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
+            }
+        })
+        return true
     }
 
     /**
@@ -445,6 +472,39 @@ export default class GcpManager extends events.EventEmitter {
         const snapshot = snapshots[snapshots.length - 1]
         if (snapshot) {
             await snapshot.delete()
+        }
+    }
+
+    private async getLatestImage(): Promise<string> {
+        let [images] = await this.compute.getImages({
+            maxResults: 2,
+            orderBy: "creationTimestamp desc",
+        })
+        const [firstImage, secondImage] = images
+        if (firstImage && firstImage.metadata.status === 'READY') {
+            return firstImage.name
+        }
+        else if (secondImage && secondImage.metadata.status === 'READY') {
+            return secondImage.name
+        }
+        else {
+            throw new Error('image is not ready')
+        }
+    }
+
+    private static async deleteLatestImage() {
+        let [images] = await this.compute.getImages({
+            orderBy: "creationTimestamp desc",
+        })
+        console.log(images)
+        // 至少保存10个镜像
+        if (!images || images.length < 10) {
+            return
+        }
+
+        const image = images[images.length - 1]
+        if (image) {
+            await image.delete()
         }
     }
 

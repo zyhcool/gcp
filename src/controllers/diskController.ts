@@ -91,6 +91,11 @@ export default class DiskController {
         GcpManager.updateSnapshot()
     }
 
+    @Get('/updateImage')
+    async updateImage() {
+        GcpManager.updateImage()
+    }
+
     @Get('/latestSnapshot')
     async latest() {
         const compute = new Compute()
