@@ -23,6 +23,7 @@ interface IConfig {
         tokenExpireTime: number, // s
     };
     SECRET_FILE: string,
+    SOURCE_IMAGE: string,
 }
 
 const isDevMode = process.env.NODE_ENV === "dev";
@@ -50,7 +51,8 @@ const Config: IConfig = {
         password: '5c82bd64111990e96805554be1b25a16e656f86119fe622ac6213be0b0db07b4', // 哈希过的密码
         tokenExpireTime: 1 * 60 * 60,
     },
-    SECRET_FILE: '/var/projects/gcp/auth/auth.json'
+    SECRET_FILE: '/var/projects/gcp/auth/auth.json',
+    SOURCE_IMAGE: 'image-1'
 };
 
 export { Config };

@@ -162,6 +162,7 @@ export default class GcpManager extends events.EventEmitter {
         let { machineType, location, vcpu, ram } = config;
         const PROJECT_ID = Config.PROJECT_ID;
         const snapshot = this.snapshot
+        const sourceImage = Config.SOURCE_IMAGE
 
         const region = this.compute.region(location);
 
@@ -190,7 +191,8 @@ export default class GcpManager extends events.EventEmitter {
                     autoDelete: true, // 挂载在的实例被删除时，是否该磁盘也自动删除
                     initializeParams: {
                         diskName,
-                        sourceSnapshot: `projects/${PROJECT_ID}/global/snapshots/${snapshot}`,
+                        // sourceSnapshot: `projects/${PROJECT_ID}/global/snapshots/${snapshot}`,
+                        sourceImage: `projects/${PROJECT_ID}/global/images/${sourceImage}`,
                         diskType: `projects/${PROJECT_ID}/zones/${zoneName}/diskTypes/${config.diskType}`,
                         diskSizeGb: config.diskSize,
                     },
