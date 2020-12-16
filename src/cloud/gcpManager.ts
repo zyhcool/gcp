@@ -481,7 +481,7 @@ export default class GcpManager extends events.EventEmitter {
             const res = await image.create(disk)
             res[1].on("complete", (metadata) => {
                 if (metadata.status === 'DONE' && metadata.progress === 100) {
-                    console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
+                    console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：40.595s
                 }
                 // 重启实例
                 vm.start().then(data => console.log(data))
@@ -497,10 +497,10 @@ export default class GcpManager extends events.EventEmitter {
         })
         const [firstImage, secondImage] = images
         if (firstImage && firstImage.metadata.status === 'READY') {
-            return firstImage.name
+            return firstImage.metadata.name
         }
         else if (secondImage && secondImage.metadata.status === 'READY') {
-            return secondImage.name
+            return secondImage.metadata.name
         }
         else {
             throw new Error('image is not ready')

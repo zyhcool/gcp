@@ -54,7 +54,7 @@ const Config: IConfig = {
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json',
     SOURCE_IMAGE: 'image-1',
-    SOURCE_INSTANCE: 'gcp-test'
+    SOURCE_INSTANCE: 'instance-1'
 };
 
 export { Config };

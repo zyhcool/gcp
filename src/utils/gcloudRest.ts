@@ -66,12 +66,17 @@ export default class GcloudRest {
         return quotas
     }
 
+    /**
+     * @description 创建新的镜像
+     * @param {} 
+     * @return {} 
+     */
     static async createImage() {
         const authClient = await this.auth.getClient()
         const res = await this.compute.images.insert({
             auth: authClient,
             project: Config.PROJECT_ID,
-            forceCreate: true,
+            forceCreate: true, // 不关机强制创建
             requestBody: {
                 name: `${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`,
                 sourceDisk: `projects/${Config.PROJECT_ID}/zones/${Config.SOURCE_DISK_ZONE}/disks/${Config.SOURCE_DISK}`,
