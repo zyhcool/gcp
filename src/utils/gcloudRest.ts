@@ -66,6 +66,18 @@ export default class GcloudRest {
         return quotas
     }
 
+    static async createImage() {
+        const authClient = await this.auth.getClient()
+        const res = await this.compute.images.insert({
+            auth: authClient,
+            project: Config.PROJECT_ID,
+            requestBody: {
+                name: `${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`,
+                sourceDisk: `projects/${Config.PROJECT_ID}/zone/${Config.SOURCE_DISK_ZONE}/disks/${Config.SOURCE_DISK}`,
+            }
+        })
+
+    }
 
 
 }

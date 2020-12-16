@@ -93,6 +93,7 @@ export default class DiskController {
 
     @Get('/updateImage')
     async updateImage() {
+
         GcpManager.updateImage()
     }
 

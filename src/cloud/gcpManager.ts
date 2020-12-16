@@ -335,27 +335,6 @@ export default class GcpManager extends events.EventEmitter {
         return true
     }
 
-    /**
-     * @description 更新snapshot（删除原有snapshot，新建snapshot）
-     * @param {} 
-     * @return {} 
-     */
-    public static async updateImage() {
-        const now = Date.now()
-        // 删除旧的image
-        await this.deleteLatestImage()
-        // 重新创建image
-        const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
-        const disk = zone.disk(Config.SOURCE_DISK);
-        const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
-        const res = await image.create(disk)
-        res[1].on("complete", (metadata) => {
-            if (metadata.status === 'DONE' && metadata.progress === 100) {
-                console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
-            }
-        })
-        return true
-    }
 
     /**
      * @description 检查配额是否够用
@@ -473,6 +452,32 @@ export default class GcpManager extends events.EventEmitter {
         if (snapshot) {
             await snapshot.delete()
         }
+    }
+
+    /**
+     * @description 更新snapshot（删除原有snapshot，新建snapshot）
+     * @param {} 
+     * @return {} 
+     */
+    public static async updateImage() {
+        const now = Date.now()
+        // 删除旧的image
+        await this.deleteLatestImage()
+
+
+        await GcloudRest.createImage()
+
+        // 重新创建image
+        // const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
+        // const disk = zone.disk(Config.SOURCE_DISK);
+        // const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
+        // const res = await image.create(disk)
+        // res[1].on("complete", (metadata) => {
+        //     if (metadata.status === 'DONE' && metadata.progress === 100) {
+        //         console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
+        //     }
+        // })
+        return true
     }
 
     private async getLatestImage(): Promise<string> {
