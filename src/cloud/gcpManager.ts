@@ -465,18 +465,28 @@ export default class GcpManager extends events.EventEmitter {
         await this.deleteLatestImage()
 
 
-        await GcloudRest.createImage()
+        // await GcloudRest.createImage()
+
 
         // 重新创建image
-        // const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
-        // const disk = zone.disk(Config.SOURCE_DISK);
-        // const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
-        // const res = await image.create(disk)
-        // res[1].on("complete", (metadata) => {
-        //     if (metadata.status === 'DONE' && metadata.progress === 100) {
-        //         console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
-        //     }
-        // })
+        const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
+        // 关停实例
+        const vm = zone.vm(Config.SOURCE_INSTANCE)
+        const [stopOperation] = await vm.stop()
+        const stopMetadata = await operationPromisefy(stopOperation, 'complete')
+        console.log('关停了：', stopMetadata)
+        if (stopMetadata.status === 'DONE' && stopMetadata.progress === 100) {
+            const disk = zone.disk(Config.SOURCE_DISK);
+            const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
+            const res = await image.create(disk)
+            res[1].on("complete", (metadata) => {
+                if (metadata.status === 'DONE' && metadata.progress === 100) {
+                    console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：
+                }
+                // 重启实例
+                vm.start().then(data => console.log(data))
+            })
+        }
         return true
     }
 

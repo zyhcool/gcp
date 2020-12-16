@@ -24,6 +24,7 @@ interface IConfig {
     };
     SECRET_FILE: string,
     SOURCE_IMAGE: string,
+    SOURCE_INSTANCE: string,
 }
 
 const isDevMode = process.env.NODE_ENV === "dev";
@@ -52,7 +53,8 @@ const Config: IConfig = {
         tokenExpireTime: 1 * 60 * 60,
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json',
-    SOURCE_IMAGE: 'image-1'
+    SOURCE_IMAGE: 'image-1',
+    SOURCE_INSTANCE: 'gcp-test'
 };
 
 export { Config };

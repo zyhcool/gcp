@@ -71,9 +71,10 @@ export default class GcloudRest {
         const res = await this.compute.images.insert({
             auth: authClient,
             project: Config.PROJECT_ID,
+            forceCreate: true,
             requestBody: {
                 name: `${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`,
-                sourceDisk: `projects/${Config.PROJECT_ID}/zone/${Config.SOURCE_DISK_ZONE}/disks/${Config.SOURCE_DISK}`,
+                sourceDisk: `projects/${Config.PROJECT_ID}/zones/${Config.SOURCE_DISK_ZONE}/disks/${Config.SOURCE_DISK}`,
             }
         })
 
