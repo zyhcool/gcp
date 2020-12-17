@@ -455,18 +455,14 @@ export default class GcpManager extends events.EventEmitter {
     }
 
     /**
-     * @description 更新snapshot（删除原有snapshot，新建snapshot）
+     * @description 更新image（删除原有image，新建image）
      * @param {} 
      * @return {} 
      */
     public static async updateImage() {
-        const now = Date.now()
+        const start = Date.now()
         // 删除旧的image
         await this.deleteLatestImage()
-
-
-        // await GcloudRest.createImage()
-
 
         // 重新创建image
         const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
@@ -481,7 +477,7 @@ export default class GcpManager extends events.EventEmitter {
             const res = await image.create(disk)
             res[1].on("complete", (metadata) => {
                 if (metadata.status === 'DONE' && metadata.progress === 100) {
-                    console.log('更新image用时：%s s', (Date.now() - now) / 1000) // 测试数据：40.595s
+                    console.log('更新image用时：%s s', (Date.now() - start) / 1000) // 测试数据：40.595s
                 }
                 // 重启实例
                 vm.start().then(data => console.log(data))
@@ -540,10 +536,18 @@ export default class GcpManager extends events.EventEmitter {
     }
 
 
-    static async resizeDisk(zone: string, disk: string, size: number) {
-        await GcloudRest.resizeDisk({ zone, disk, size })
+    public static async getVms(orderId?: string) {
+        let options = {
+            autoPaginate: false,
+        }
+        if (orderId) {
+            const reg = new RegExp(`${orderId}`, 'g')
+            options['filter'] = reg;
+        }
+        const res = await this.compute.getVMs(options)
+        console.log(res)
+        return res[0]
     }
-
 
 
 }

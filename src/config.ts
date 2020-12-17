@@ -23,7 +23,6 @@ interface IConfig {
         tokenExpireTime: number, // s
     };
     SECRET_FILE: string,
-    SOURCE_IMAGE: string,
     SOURCE_INSTANCE: string,
 }
 
@@ -40,7 +39,7 @@ const Config: IConfig = {
     SKU_KEY: "AIzaSyDAya1jNjQmt1x7ViBWV01W-hafSuA6r7s",
     NETWORK_TAGS: ['mongodb'],
     SNAPSHOT: "snapshot-1",
-    SOURCE_DISK: "gcp-test1",
+    SOURCE_DISK: "instance-1",
     SOURCE_DISK_ZONE: "us-central1-a",
     EOG: {
         baseUrl: 'http://34.96.179.189:880',
@@ -53,7 +52,6 @@ const Config: IConfig = {
         tokenExpireTime: 1 * 60 * 60,
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json',
-    SOURCE_IMAGE: 'image-1',
     SOURCE_INSTANCE: 'instance-1'
 };
 

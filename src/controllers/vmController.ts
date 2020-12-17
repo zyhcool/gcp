@@ -108,6 +108,13 @@ export default class VmController {
         // }
     }
 
+    @Get('/vms')
+    async vms(
+        @QueryParam('orderId') orderId: string
+    ) {
+        return (await GcpManager.getVms(orderId)).length;
+    }
+
 }
 
 
