@@ -538,13 +538,16 @@ export default class GcpManager extends events.EventEmitter {
     }
 
 
-    public static async getVms(orderId?: string) {
+    public static async getVms(orderId?: string, status?: string) {
         let options = {
             autoPaginate: false,
+            filter: '',
         }
         if (orderId) {
-            const reg = new RegExp(`${orderId}`, 'g')
-            options['filter'] = `labels.orderid eq ${orderId}`
+            options.filter += `(labels.orderid eq ${orderId})`
+        }
+        if (status) {
+            options.filter += `(status eq ${status})`
         }
         const res = await this.compute.getVMs(options)
         console.log(res[0])

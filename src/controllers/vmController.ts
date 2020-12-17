@@ -30,14 +30,11 @@ export default class VmController {
     vmService: VmService;
 
     @Get("s")
-    async gets() {
-        // Creates a client
-        const compute = new Compute();
-
-        const disks = await compute.getDisks({ autoPaginate: false })
-
-        console.log(disks)
-        return disks
+    async vms(
+        @QueryParam('orderId') orderId: string,
+        @QueryParam('status') status: string,
+    ) {
+        return (await GcpManager.getVms(orderId, status)).length;
     }
 
     @Get("/")
@@ -106,13 +103,6 @@ export default class VmController {
         let ha = await Axios.delete('https://compute.googleapis.com/compute/v1/projects/gcp-test-293701/regions/us-central1/addresses/addressname')
         console.log(ha)
         // }
-    }
-
-    @Get('/vms')
-    async vms(
-        @QueryParam('orderId') orderId: string
-    ) {
-        return (await GcpManager.getVms(orderId)).length;
     }
 
 }
