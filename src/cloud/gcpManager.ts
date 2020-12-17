@@ -186,7 +186,8 @@ export default class GcpManager extends events.EventEmitter {
         // EOG需要的
         const orderNumber = orderId
         const target = user
-        const token = await EOGTokenCache.getToken()
+        // const token = await EOGTokenCache.getToken()
+        const token = 'faketoken'
 
         const vmconfig = {
             disks: [
@@ -222,6 +223,7 @@ export default class GcpManager extends events.EventEmitter {
             },
             labels: {
                 orderid: orderId,
+                env: 'qa',
             },
             http: true,
             https: true,
@@ -542,10 +544,10 @@ export default class GcpManager extends events.EventEmitter {
         }
         if (orderId) {
             const reg = new RegExp(`${orderId}`, 'g')
-            options['filter'] = reg;
+            options['filter'] = `labels.orderid eq ${orderId}`
         }
         const res = await this.compute.getVMs(options)
-        console.log(res)
+        console.log(res[0])
         return res[0]
     }
 
