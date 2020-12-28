@@ -1,4 +1,6 @@
 
-
-ssh root@108.59.85.147 -o stricthostkeychecking=no "cd /data;ls" > /dev/null
+echo '1'
+echo '2'
+echo '3'
+echo '4'
 

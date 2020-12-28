@@ -25,7 +25,7 @@ prepareDir(){
 prepareDir
 
 # 获取序列号
-seqNum=$(${seqTool})
+seqNum=$(${seqTool} | sed -n '1,1p')
 
 # http请求获取授权文件
 curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /data/bfchain/conf/peerLicense.data

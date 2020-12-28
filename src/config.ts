@@ -52,7 +52,7 @@ const Config: IConfig = {
         tokenExpireTime: 1 * 60 * 60,
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json',
-    SOURCE_INSTANCE: 'instance-1'
+    SOURCE_INSTANCE: 'instance-1',
 };
 
 export { Config };
