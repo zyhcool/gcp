@@ -3,6 +3,7 @@ import {
     Controller,
     QueryParam,
     Put,
+    BodyParam,
 } from "routing-controllers";
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
@@ -107,8 +108,8 @@ export default class VmController {
 
     @Put('/id')
     async test(
-        @QueryParam("id") id: string,
-        @QueryParam("serialNo") serialNo: number,
+        @BodyParam("id") id: string,
+        @BodyParam("serialNo") serialNo: number,
     ) {
         console.log(id, serialNo)
     }

@@ -36,10 +36,10 @@ curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=$
 
 
 # 重启BFChain
-supervisorctl start bcf > /dev/null
+# supervisorctl start bcf > /dev/null
 
 # TODO 发送序列号
-curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}"
+curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}" > /dev/null
 
 # TODO 确认授权成功
 
