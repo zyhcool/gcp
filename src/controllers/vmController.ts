@@ -2,6 +2,7 @@ import {
     Get,
     Controller,
     QueryParam,
+    Put,
 } from "routing-controllers";
 import { Inject } from "typedi";
 import { SkuService } from "../services/skuService";
@@ -11,8 +12,6 @@ import { getUUid } from "../utils/uuidGenerator";
 import Gcp from "../cloud/gcpManager";
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { OrderService } from "../services/orderService";
-import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
-import operationPromisefy from "../utils/promisefy";
 import Axios from "axios";
 import GcpManager from "../cloud/gcpManager";
 
@@ -35,7 +34,6 @@ export default class VmController {
         @QueryParam('status') status: string,
     ) {
         let vms = await GcpManager.getVms(orderId, status)
-        console.log(vms)
         return vms.length;
     }
 
@@ -105,6 +103,14 @@ export default class VmController {
         let ha = await Axios.delete('https://compute.googleapis.com/compute/v1/projects/gcp-test-293701/regions/us-central1/addresses/addressname')
         console.log(ha)
         // }
+    }
+
+    @Put('/id')
+    async test(
+        @QueryParam("id") id: string,
+        @QueryParam("serialNo") serialNo: number,
+    ) {
+        console.log(id, serialNo)
     }
 
 }

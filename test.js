@@ -48,3 +48,5 @@ async function func() {
 async function test() {
     throw new Error(`test error`)
 }
+
+let ha = require('inspector')
