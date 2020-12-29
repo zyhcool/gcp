@@ -109,9 +109,16 @@ export default class VmController {
     @Put('/id')
     async test(
         @BodyParam("id") id: string,
-        @BodyParam("serialNo") serialNo: number,
+        @BodyParam("serialNo") serialNo: string,
     ) {
         console.log(id, serialNo)
+    }
+
+    @Put('/bcfNum')
+    async hdf(
+        @BodyParam("bcfNum") bcfNum: number,
+    ) {
+        console.log(bcfNum)
     }
 
 }

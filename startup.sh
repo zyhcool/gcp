@@ -42,7 +42,8 @@ curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=$
 curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}" > /dev/null
 
 # TODO 确认授权成功
+bcfNum=$(ps aux | grep ssh | grep -v grep | wc -l)
 
-
+curl -X PUT ${authConfirmUrl} -d "bcfNum=${bcfNum}"
 
 
