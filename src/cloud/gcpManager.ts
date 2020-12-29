@@ -193,6 +193,7 @@ export default class GcpManager extends events.EventEmitter {
 
         const seqTool = '/var/local/mysh/seqNum.sh'
         const seqSaveUrl = 'http://108.59.85.147:4040/api/vm/id'
+        const authConfirmUrl = 'http://108.59.85.147:4040/api/vm/bcfNum'
 
         const vmconfig = {
             disks: [
@@ -214,7 +215,7 @@ export default class GcpManager extends events.EventEmitter {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token} ${seqTool} ${ipinstanceId} ${seqSaveUrl}`
+                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token} ${seqTool} ${ipinstanceId} ${seqSaveUrl} ${authConfirmUrl}`
                     }
                 ]
             },
