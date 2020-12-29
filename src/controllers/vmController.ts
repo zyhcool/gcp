@@ -34,7 +34,9 @@ export default class VmController {
         @QueryParam('orderId') orderId: string,
         @QueryParam('status') status: string,
     ) {
-        return (await GcpManager.getVms(orderId, status)).length;
+        let vms = await GcpManager.getVms(orderId, status)
+        console.log(vms)
+        return vms.length;
     }
 
     @Get("/")

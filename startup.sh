@@ -5,6 +5,9 @@ orderNumber=$2
 target=$3
 token=$4
 seqTool=$5
+ipinstanceId=$6
+seqSaveUrl=$7
+authConfirmUrl=$8
 
 # 检查并安装jq
 prepareJq(){
@@ -34,4 +37,12 @@ curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=$
 
 # 重启BFChain
 supervisorctl start bcf > /dev/null
+
+# TODO 发送序列号
+curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}"
+
+# TODO 确认授权成功
+
+
+
 
