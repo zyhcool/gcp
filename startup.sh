@@ -8,6 +8,7 @@ seqTool=$5
 ipinstanceId=$6
 seqSaveUrl=$7
 authConfirmUrl=$8
+retryNum=$9
 
 # 检查并安装jq
 prepareJq(){
@@ -34,16 +35,16 @@ seqNum=$(${seqTool} | sed -n '1,1p')
 curl -X POST ${url} -H "token:${token}" -d "sequenceCode=${seqNum}&orderNumber=${orderNumber}&target=${target}" | jq ".data" > /data/bfchain/conf/peerLicense.data
 
 
+# 发送序列号
+# curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}" > /dev/null
 
 # 重启BFChain
-# supervisorctl start bcf > /dev/null
+supervisorctl start bcf > /dev/null
 
-# TODO 发送序列号
-curl -X PUT ${seqSaveUrl} -d "id=${ipinstanceId}&serialNo=${seqNum}" > /dev/null
 
-# TODO 确认授权成功
-bcfNum=$(ps aux | grep ssh | grep -v grep | wc -l)
+# 确认授权成功
+bcfNum=$(ps aux | grep bcf | grep blockChain | grep -v grep | wc -l)
 
-curl -X PUT ${authConfirmUrl} -d "bcfNum=${bcfNum}"
+# curl -X PUT ${authConfirmUrl} -d "id=${ipinstanceId}&bcfNum=${bcfNum}"
 
 

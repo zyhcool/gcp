@@ -1,4 +1,6 @@
 import axios from "axios";
+import { write, writeFileSync } from "fs";
+import { Token } from "typedi";
 import { Config } from "../config";
 import { Cache } from "./cache";
 
@@ -30,6 +32,7 @@ export default class EOGTokenCache {
                 }
             }).then((res) => {
                 const responseBody = res.data;
+                console.log(responseBody, typeof responseBody.code)
                 if (responseBody.code === 0) {
                     resolve(responseBody.data.token)
                     this.setToken(responseBody.data.token)
@@ -44,5 +47,34 @@ export default class EOGTokenCache {
 
     static setToken(token: string) {
         Cache.set(this.prefix, token, Config.EOG.tokenExpireTime | this.expire);
+    }
+
+    static getAuthCode(token: string) {
+        const EOG = Config.EOG;
+        return new Promise((resolve, reject) => {
+            axios.request({
+                url: EOG.baseUrl + EOG.authPath,
+                method: EOG.authMethod,
+                headers: {
+                    "token": token,
+                },
+                data: {
+                    orderNumber: 'orderNumber',
+                    target: 'target',
+                    sequenceCode: 'e63e5e5cff078857ca5c1d6a4a03c6e7d5e6eb1784fedc90a6ba0fbc5b913460'
+                }
+            }).then((res) => {
+                const responseBody = res.data;
+                console.log(responseBody.data)
+                if (responseBody.code === 0) {
+                    writeFileSync('authfile.data', Buffer.from(responseBody.data))
+                    resolve(responseBody.data)
+                } else {
+                    reject(responseBody.code)
+                }
+            }).catch((e) => {
+                reject(e)
+            })
+        })
     }
 }

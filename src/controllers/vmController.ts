@@ -15,6 +15,8 @@ import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { OrderService } from "../services/orderService";
 import Axios from "axios";
 import GcpManager from "../cloud/gcpManager";
+import EOGTokenCache from "../utils/EOGTokenCache";
+import { Cache } from "../utils/cache";
 
 
 @Controller("/vm")
@@ -116,9 +118,18 @@ export default class VmController {
 
     @Put('/bcfNum')
     async hdf(
+        @BodyParam("id") id: string,
         @BodyParam("bcfNum") bcfNum: number,
     ) {
-        console.log(bcfNum)
+        console.log(id, bcfNum)
+    }
+
+    @Get('/getEogToken')
+    async jkjk() {
+        const token = await EOGTokenCache.getToken();
+        console.log(Cache.get('eogToken:'))
+        console.log(token)
+        await EOGTokenCache.getAuthCode(token)
     }
 
 }

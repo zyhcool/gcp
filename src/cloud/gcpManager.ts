@@ -215,7 +215,7 @@ export default class GcpManager extends events.EventEmitter {
                 items: [
                     {
                         key: 'startup-script',
-                        value: `#! /bin/bash\n/var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token} ${seqTool} ${ipinstanceId} ${seqSaveUrl} ${authConfirmUrl}`
+                        value: `#! /bin/bash\nsh /var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token} ${seqTool} ${ipinstanceId} ${seqSaveUrl} ${authConfirmUrl} ${100}`
                     }
                 ]
             },
