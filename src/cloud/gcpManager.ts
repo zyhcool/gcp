@@ -488,7 +488,7 @@ export default class GcpManager extends events.EventEmitter {
                     console.log('更新image用时：%s s', (Date.now() - start) / 1000) // 测试数据：40.595s
                 }
                 // 重启实例
-                vm.start().then(data => console.log(data))
+                // vm.start().then(data => console.log(data))
             })
         }
         return true
