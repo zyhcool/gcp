@@ -534,7 +534,7 @@ export default class GcpManager extends events.EventEmitter {
         console.log(`current images: ${images}`, images[0], images[0].metadata)
 
         images = (images as Array<any>).filter((image) => {
-            return image && image.metadata && images.metadata.name.includes(Config.ENV)
+            return image && image.metadata && image.metadata.name.includes(Config.ENV)
         })
         // 至少保存5个镜像
         if (!images || images.length < 5) {
