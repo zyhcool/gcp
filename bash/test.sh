@@ -1,3 +1,3 @@
 #! /bin/bash
 
-echo 'haha'
+echo ps >> ha.log

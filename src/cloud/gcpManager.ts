@@ -467,7 +467,7 @@ export default class GcpManager extends events.EventEmitter {
      * @param {} 
      * @return {} 
      */
-    public static async updateImage() {
+    public static async updateImage(env?: string) {
         const start = Date.now()
         // 删除旧的image
         await this.deleteLatestImage()
@@ -482,7 +482,11 @@ export default class GcpManager extends events.EventEmitter {
         if (stopMetadata.status === 'DONE' && stopMetadata.progress === 100) {
             const disk = zone.disk(Config.SOURCE_DISK);
             const image = this.compute.image(`${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
-            const res = await image.create(disk)
+            const res = await image.create(disk, {
+                labels: {
+                    env: env || Config.ENV,
+                }
+            })
             res[1].on("complete", (metadata) => {
                 if (metadata.status === 'DONE' && metadata.progress === 100) {
                     console.log('更新image用时：%s s', (Date.now() - start) / 1000) // 测试数据：40.595s
@@ -494,36 +498,49 @@ export default class GcpManager extends events.EventEmitter {
         return true
     }
 
-    private async getLatestImage(): Promise<string> {
+    async getLatestImage(): Promise<string> {
         let [images] = await this.compute.getImages({
-            maxResults: 2,
+            maxResults: 4,
             orderBy: "creationTimestamp desc",
+            filter: `(labels.env eq ${Config.ENV})`,
         })
-        const [firstImage, secondImage] = images
-        if (firstImage && firstImage.metadata.status === 'READY') {
-            return firstImage.metadata.name
-        }
-        else if (secondImage && secondImage.metadata.status === 'READY') {
-            return secondImage.metadata.name
-        }
-        else {
+        const latestImage = (images as Array<any>).find((image) => {
+            return image && image.metadata && images.metadata.name.includes(Config.ENV) && image.metadata.status === "READY"
+        })
+
+        if (!latestImage) {
             throw new Error('image is not ready')
         }
+        return latestImage
+
+
+        // const [firstImage, secondImage] = images
+        // if (firstImage && firstImage.metadata.status === 'READY') {
+        //     return firstImage.metadata.name
+        // }
+        // else if (secondImage && secondImage.metadata.status === 'READY') {
+        //     return secondImage.metadata.name
+        // }
+        // else {
+        //     throw new Error('image is not ready')
+        // }
     }
 
     private static async deleteLatestImage() {
         let [images] = await this.compute.getImages({
             orderBy: "creationTimestamp desc",
+            filter: `(labels.env eq ${Config.ENV})`
         })
         console.log(images)
-        // 至少保存10个镜像
-        if (!images || images.length < 10) {
+        // 至少保存5个镜像
+        if (!images || images.length < 5) {
             return
         }
 
         const image = images[images.length - 1]
         if (image) {
             await image.delete()
+            console.log(`删除镜像：${image.metadata.name}`)
         }
     }
 

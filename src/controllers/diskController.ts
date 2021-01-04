@@ -97,15 +97,9 @@ export default class DiskController {
         GcpManager.updateImage()
     }
 
-    @Get('/latestSnapshot')
+    @Get('/latestImage')
     async latest() {
-        const compute = new Compute()
-        let [snapshots] = await compute.getSnapshots({
-            maxResults: 1,
-            orderBy: "creationTimestamp desc",
-        })
 
-        console.log(snapshots)
     }
 
     @Get('/resize')

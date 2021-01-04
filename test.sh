@@ -11,9 +11,9 @@ retryNum=$1
 
 bcfNum=$(ps aux | grep bcf | grep -v grep | wc -l)
 
-while [ "$bcfNum" -eq 0 ] && [ "$retryNum" -gt 0 ]
+while [ "${bcfNum}" -eq 0 ] && [ "${retryNum}" -gt 0 ]
 do
-    sleep 1m
+    sleep 3s
     ((retryNum-=1))
     echo $bcfNum
     bcfNum=$(ps aux | grep bcf | grep -v grep | wc -l)

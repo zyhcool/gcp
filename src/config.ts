@@ -24,6 +24,7 @@ interface IConfig {
     };
     SECRET_FILE: string,
     SOURCE_INSTANCE: string,
+    ENV: string
 }
 
 const isDevMode = process.env.NODE_ENV === "dev";
@@ -53,6 +54,7 @@ const Config: IConfig = {
     },
     SECRET_FILE: '/var/projects/gcp/auth/auth.json',
     SOURCE_INSTANCE: 'instance-1',
+    ENV: 'qa',
 };
 
 export { Config };
