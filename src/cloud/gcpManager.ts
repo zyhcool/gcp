@@ -481,7 +481,7 @@ export default class GcpManager extends events.EventEmitter {
         console.log('关停了：', stopMetadata)
         if (stopMetadata.status === 'DONE' && stopMetadata.progress === 100) {
             const disk = zone.disk(Config.SOURCE_DISK);
-            const image = this.compute.image(`${Config.ENV}-${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
+            const image = this.compute.image(`${env || Config.ENV}-${Config.PROJECT_ID}-${Config.SOURCE_DISK_ZONE}-${Date.now()}`)
             const res = await image.create(disk)
             res[1].on("complete", (metadata) => {
                 if (metadata.status === 'DONE' && metadata.progress === 100) {

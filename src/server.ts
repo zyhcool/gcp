@@ -14,7 +14,7 @@ import { Container } from "typedi";
 import { dbConnect } from "./init/dbConnection";
 const setupServer = async () => {
     // mongodb connection
-    // await dbConnect();
+    await dbConnect();
 
     const app = new Koa();
 

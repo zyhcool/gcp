@@ -92,9 +92,11 @@ export default class DiskController {
     }
 
     @Get('/updateImage')
-    async updateImage() {
+    async updateImage(
+        @QueryParam('env') env: string
+    ) {
 
-        GcpManager.updateImage()
+        GcpManager.updateImage(env)
     }
 
     @Get('/latestImage')
