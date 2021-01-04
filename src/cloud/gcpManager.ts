@@ -470,7 +470,7 @@ export default class GcpManager extends events.EventEmitter {
     public static async updateImage(env?: string) {
         const start = Date.now()
         // 删除旧的image
-        await this.deleteLatestImage()
+        await this.deleteLatestImage(env)
 
         // 重新创建image
         const zone = this.compute.zone(Config.SOURCE_DISK_ZONE);
@@ -522,7 +522,7 @@ export default class GcpManager extends events.EventEmitter {
         // }
     }
 
-    private static async deleteLatestImage() {
+    private static async deleteLatestImage(env?: string) {
         let [images] = await this.compute.getImages({
             orderBy: "creationTimestamp desc",
             // filter: `(labels.env eq ${Config.ENV})`
@@ -530,7 +530,7 @@ export default class GcpManager extends events.EventEmitter {
         console.log(`current images: ${images}`, images[0], images[0].metadata)
 
         images = (images as Array<any>).filter((image) => {
-            return image && image.metadata && image.metadata.name.includes(Config.ENV)
+            return image && image.metadata && image.metadata.name.includes(env || Config.ENV)
         })
         // 至少保存5个镜像
         if (!images || images.length < 5) {
