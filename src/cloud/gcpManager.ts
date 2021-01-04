@@ -502,7 +502,7 @@ export default class GcpManager extends events.EventEmitter {
         let [images] = await this.compute.getImages({
             maxResults: 4,
             orderBy: "creationTimestamp desc",
-            filter: `(labels.env eq ${Config.ENV})`,
+            // filter: `(labels.env eq ${Config.ENV})`,
         })
         const latestImage = (images as Array<any>).find((image) => {
             return image && image.metadata && images.metadata.name.includes(Config.ENV) && image.metadata.status === "READY"
@@ -529,9 +529,12 @@ export default class GcpManager extends events.EventEmitter {
     private static async deleteLatestImage() {
         let [images] = await this.compute.getImages({
             orderBy: "creationTimestamp desc",
-            filter: `(labels.env eq ${Config.ENV})`
+            // filter: `(labels.env eq ${Config.ENV})`
         })
-        console.log(images)
+
+        images = (images as Array<any>).filter((image) => {
+            return image && image.metadata && images.metadata.name.includes(Config.ENV)
+        })
         // 至少保存5个镜像
         if (!images || images.length < 5) {
             return
