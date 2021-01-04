@@ -501,7 +501,7 @@ export default class GcpManager extends events.EventEmitter {
             // filter: `(labels.env eq ${Config.ENV})`,
         })
         const latestImage = (images as Array<any>).find((image) => {
-            return image && image.metadata && images.metadata.name.includes(Config.ENV) && image.metadata.status === "READY"
+            return image && image.metadata && image.metadata.name.includes(Config.ENV) && image.metadata.status === "READY"
         })
 
         if (!latestImage) {
