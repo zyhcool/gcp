@@ -531,6 +531,7 @@ export default class GcpManager extends events.EventEmitter {
             orderBy: "creationTimestamp desc",
             // filter: `(labels.env eq ${Config.ENV})`
         })
+        console.log(`current images: ${images}`, images[0], images[0].metadata)
 
         images = (images as Array<any>).filter((image) => {
             return image && image.metadata && images.metadata.name.includes(Config.ENV)
