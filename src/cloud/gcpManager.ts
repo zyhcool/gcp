@@ -507,7 +507,7 @@ export default class GcpManager extends events.EventEmitter {
         if (!latestImage) {
             throw new Error('image is not ready')
         }
-        return latestImage
+        return latestImage.metadata.name
 
 
         // const [firstImage, secondImage] = images
