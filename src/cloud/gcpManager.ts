@@ -583,8 +583,10 @@ export default class GcpManager extends events.EventEmitter {
         const vm = zone.vm(vmName);
         await vm.stop();
         await vm.waitFor('TERMINATED')
+        console.log('stop success')
         await vm.start();
         await vm.waitFor('RUNNING')
+        console.log('start success')
         return true;
 
 

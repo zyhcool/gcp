@@ -132,6 +132,17 @@ export default class VmController {
         await EOGTokenCache.getAuthCode(token)
     }
 
+
+    @Get('/restart')
+    async restart(
+        @QueryParam("zone") zone: string,
+        @QueryParam("vm") vm: string,
+    ) {
+        await GcpManager.restartVm(zone, vm)
+    }
+
+
+
 }
 
 
