@@ -1,6 +1,19 @@
 
 
-curl -X POST http://34.96.179.189:880/authorize -H "token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJiaW5kaW5nR2Vuc2lzQmxvY2tTaWduYXR1cmVzIjpbXSwicGFzc3dvcmQiOiI1YzgyYmQ2NDExMTk5MGU5NjgwNTU1NGJlMWIyNWExNmU2NTZmODYxMTlmZTYyMmFjNjIxM2JlMGIwZGIwN2I0IiwiZW1haWwiOiIxMzEwNTAyNzYyMEAxNjMuY29tIiwibmFtZSI6IuW8gOWPkeiAhei0puWPtyIsInJvbGUiOjMsInN0YXR1cyI6MSwidWlkIjoiNzJkNzUyMGUtN2Q0OS0zNTljLTgyODYtYWVjYmJiODAwMDNkIiwiY3JlYXRlZEF0IjoiMjAyMC0xMS0yNFQxMTo0MTozMi4wOTNaIiwidXBkYXRlZEF0IjoiMjAyMC0xMS0yNFQxMTo0MTozMi4wOTNaIiwiaWF0IjoxNjA5MTYwNzI4LCJleHAiOjE2MDkxNjQzMjh9.V-lsoBRZ_Nj49w3cEDjtyzOUTOaqrFloQvaNDufyERc" -d "sequenceCode=849sjfs83448&orderNumber=5d93e5af959a435495738aee713848e0&target=target"
+path=/e/demo/googleCloudPlatform1
 
+# [ -e /e/demo/googleCloudPlatform ]
+if [ ! -e ${path} ]
+then 
+    ha='true'
+else 
+    ha='false'
+fi
+echo ${ha}
 
-
+if [ "${ha}" = "true" ]
+then
+    echo 'it is true'
+else
+    echo 'it is false'
+fi

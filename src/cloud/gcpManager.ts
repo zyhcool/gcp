@@ -10,7 +10,6 @@ import NetworkTest from "../utils/networkTest";
 import events from "events"
 import { orderRepository, OrderStatus } from "../entities/orderEntity";
 import { instanceRepository, instanceStatus } from "../entities/instanceEntity";
-import EOGTokenCache from "../utils/EOGTokenCache";
 import GcloudRest from "../utils/gcloudRest";
 import { compute_v1 } from "googleapis";
 import { getUUid } from "../utils/uuidGenerator";
@@ -575,6 +574,29 @@ export default class GcpManager extends events.EventEmitter {
         const res = await this.compute.getVMs(options)
         console.log(res[0])
         return res[0]
+    }
+
+
+
+    public static async restartVm(zoneName: string, vmName: string) {
+        const zone = this.compute.zone(zoneName);
+        const vm = zone.vm(vmName);
+        await vm.stop();
+        await vm.waitFor('TERMINATED')
+        await vm.start();
+        await vm.waitFor('RUNNING')
+        return true;
+
+
+        // const stoppedVmMetadata = await operationPromisefy(stopOperation, 'complete', true)
+        // if (stoppedVmMetadata.status === "DONE" && stoppedVmMetadata.progress === 100) {
+        //     const [startOperation] = await vm.start();
+        //     const startedVmMetadata = await operationPromisefy(startOperation, 'complete', true)
+        //     if (startedVmMetadata.status === "DONE" && startedVmMetadata.progress === 100) {
+        //         return 
+        //     }
+        // }
+
     }
 
 
