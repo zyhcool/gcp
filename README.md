@@ -57,7 +57,11 @@ GOOGLE_APPLICATION_CREDENTIALS=/var/local/gcp-auth.json
 
 
 
-
+查看登录账号：gcloud auth list
+切换活动账号：gcloud config set account [ACCOUNT]
+使用服务账号授权：gcloud auth activate-service-account [ACCOUNT] --key-file=[KEY_FILE]
+> [使用服务账号授权](https://cloud.google.com/sdk/docs/authorizing#authorizing_with_a_service_account)
+> [activate-service-account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account)
 
 
 
