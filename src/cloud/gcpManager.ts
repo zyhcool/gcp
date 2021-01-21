@@ -215,6 +215,10 @@ export default class GcpManager extends events.EventEmitter {
                     {
                         key: 'startup-script',
                         value: `#! /bin/bash\nsh /var/local/mysh/startup.sh ${url} ${orderNumber} ${target} ${token} ${seqTool} ${ipinstanceId} ${seqSaveUrl} ${authConfirmUrl} ${100}`
+                    },
+                    {
+                        key: 'shutdown-script',
+                        value: `#! /bin/bash\necho $(pwd) >> /var/projects/gcp/shutdown.log`
                     }
                 ]
             },
